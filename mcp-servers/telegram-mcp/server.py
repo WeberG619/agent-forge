@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
 Telegram MCP Server
-Send and receive Telegram messages from Claude Code.
+Send and receive Telegram messages, videos, photos, and files from Claude Code.
 
 Tools:
   telegram_status         - Check bot connection status
   telegram_send_message   - Send a text message
+  telegram_send_video     - Send a video file or URL
+  telegram_send_photo     - Send a photo file or URL
+  telegram_send_document  - Send any file/document
   telegram_get_updates    - Get recent incoming messages
   telegram_get_chat_info  - Get info about a chat
 
@@ -17,8 +20,10 @@ Setup:
 
 import asyncio
 import json
+import mimetypes
 import os
 import sys
+import uuid
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -68,7 +73,7 @@ def load_config():
 
 
 def telegram_api(method: str, params: dict = None) -> dict:
-    """Call Telegram Bot API."""
+    """Call Telegram Bot API with JSON body (for non-file requests)."""
     if not BOT_TOKEN:
         return {"ok": False, "description": "No bot token configured"}
 
@@ -93,6 +98,104 @@ def telegram_api(method: str, params: dict = None) -> dict:
         return {"ok": False, "description": str(e)}
 
 
+def telegram_api_multipart(method: str, fields: dict, file_field: str, file_path: str) -> dict:
+    """Call Telegram Bot API with multipart/form-data for file uploads."""
+    if not BOT_TOKEN:
+        return {"ok": False, "description": "No bot token configured"}
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/{method}"
+    boundary = f"----FormBoundary{uuid.uuid4().hex}"
+
+    body_parts = []
+
+    # Add text fields
+    for key, value in fields.items():
+        if value is not None:
+            body_parts.append(
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="{key}"\r\n\r\n'
+                f"{value}\r\n"
+            )
+
+    # Add file
+    file_path_obj = Path(file_path)
+    filename = file_path_obj.name
+    content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+    file_header = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="{file_field}"; filename="{filename}"\r\n'
+        f"Content-Type: {content_type}\r\n\r\n"
+    )
+
+    file_footer = f"\r\n--{boundary}--\r\n"
+
+    try:
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+    except FileNotFoundError:
+        return {"ok": False, "description": f"File not found: {file_path}"}
+    except PermissionError:
+        return {"ok": False, "description": f"Permission denied: {file_path}"}
+    except Exception as e:
+        return {"ok": False, "description": f"Error reading file: {e}"}
+
+    # Build the full body
+    text_part = "".join(body_parts).encode("utf-8")
+    body = text_part + file_header.encode("utf-8") + file_data + file_footer.encode("utf-8")
+
+    req = urllib.request.Request(
+        url, data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8", errors="replace")
+        return {"ok": False, "description": f"HTTP {e.code}: {error_body}"}
+    except Exception as e:
+        return {"ok": False, "description": str(e)}
+
+
+def is_url(s: str) -> bool:
+    """Check if a string looks like a URL."""
+    return s.startswith("http://") or s.startswith("https://")
+
+
+def send_media(method: str, chat_id, media_field: str, media_source: str,
+               caption: str = None, parse_mode: str = None) -> dict:
+    """Send media (video, photo, document, animation) via Telegram.
+
+    Supports both URLs and local file paths.
+    """
+    if is_url(media_source):
+        # Send by URL - use JSON API
+        params = {"chat_id": chat_id, media_field: media_source}
+        if caption:
+            params["caption"] = caption
+        if parse_mode:
+            params["parse_mode"] = parse_mode
+        return telegram_api(method, params)
+    else:
+        # Send local file - use multipart upload
+        fields = {"chat_id": str(chat_id)}
+        if caption:
+            fields["caption"] = caption
+        if parse_mode:
+            fields["parse_mode"] = parse_mode
+        return telegram_api_multipart(method, fields, media_field, media_source)
+
+
+def check_chat_allowed(chat_id) -> bool:
+    """Check if chat_id is in the allowed list (or if list is empty = allow all)."""
+    if not ALLOWED_CHAT_IDS:
+        return True
+    return str(chat_id) in [str(c) for c in ALLOWED_CHAT_IDS]
+
+
 # Track last update ID for polling
 _last_update_id = 0
 
@@ -102,6 +205,24 @@ server = Server("telegram-mcp")
 
 @server.list_tools()
 async def list_tools():
+    media_source_schema = {
+        "type": "string",
+        "description": "Local file path or HTTPS URL to the media",
+    }
+    caption_schema = {
+        "type": "string",
+        "description": "Optional caption text (supports Markdown)",
+    }
+    parse_mode_schema = {
+        "type": "string",
+        "description": "Parse mode for caption: Markdown or HTML",
+        "enum": ["Markdown", "HTML"],
+    }
+    chat_id_schema = {
+        "type": ["string", "integer"],
+        "description": "Telegram chat ID (number) or @username",
+    }
+
     return [
         Tool(
             name="telegram_status",
@@ -117,10 +238,7 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "chat_id": {
-                        "type": ["string", "integer"],
-                        "description": "Telegram chat ID (number) or @username",
-                    },
+                    "chat_id": chat_id_schema,
                     "text": {
                         "type": "string",
                         "description": "Message text (supports Markdown)",
@@ -133,6 +251,62 @@ async def list_tools():
                     },
                 },
                 "required": ["chat_id", "text"],
+            },
+        ),
+        Tool(
+            name="telegram_send_video",
+            description="Send a video to a Telegram chat. Supports local file paths and HTTPS URLs. Max 50MB for uploads, 20MB for URL.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "chat_id": chat_id_schema,
+                    "video": media_source_schema,
+                    "caption": caption_schema,
+                    "parse_mode": parse_mode_schema,
+                },
+                "required": ["chat_id", "video"],
+            },
+        ),
+        Tool(
+            name="telegram_send_photo",
+            description="Send a photo to a Telegram chat. Supports local file paths and HTTPS URLs. Max 10MB, will be compressed.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "chat_id": chat_id_schema,
+                    "photo": media_source_schema,
+                    "caption": caption_schema,
+                    "parse_mode": parse_mode_schema,
+                },
+                "required": ["chat_id", "photo"],
+            },
+        ),
+        Tool(
+            name="telegram_send_document",
+            description="Send any file as a document to a Telegram chat. Supports local file paths and HTTPS URLs. Max 50MB.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "chat_id": chat_id_schema,
+                    "document": media_source_schema,
+                    "caption": caption_schema,
+                    "parse_mode": parse_mode_schema,
+                },
+                "required": ["chat_id", "document"],
+            },
+        ),
+        Tool(
+            name="telegram_send_animation",
+            description="Send a GIF or MP4 animation (no sound) to a Telegram chat. Supports local file paths and HTTPS URLs.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "chat_id": chat_id_schema,
+                    "animation": media_source_schema,
+                    "caption": caption_schema,
+                    "parse_mode": parse_mode_schema,
+                },
+                "required": ["chat_id", "animation"],
             },
         ),
         Tool(
@@ -155,15 +329,29 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "chat_id": {
-                        "type": ["string", "integer"],
-                        "description": "Telegram chat ID or @username",
-                    },
+                    "chat_id": chat_id_schema,
                 },
                 "required": ["chat_id"],
             },
         ),
     ]
+
+
+def _media_response(result: dict, chat_id, media_type: str) -> list:
+    """Build a standard response for media send operations."""
+    if result.get("ok"):
+        msg = result["result"]
+        return [TextContent(type="text", text=json.dumps({
+            "success": True,
+            "message_id": msg.get("message_id"),
+            "chat_id": chat_id,
+            "media_type": media_type,
+            "timestamp": datetime.now().isoformat(),
+        }, indent=2))]
+    else:
+        return [TextContent(type="text", text=json.dumps({
+            "error": result.get("description", f"Failed to send {media_type}"),
+        }, indent=2))]
 
 
 @server.call_tool()
@@ -180,6 +368,7 @@ async def call_tool(name: str, arguments: dict):
                 "bot_username": bot.get("username", ""),
                 "bot_id": bot.get("id"),
                 "can_read_messages": not bot.get("is_bot", True) or True,
+                "supported_media": ["video", "photo", "document", "animation"],
                 "instructions": "Send a message to your bot on Telegram to start chatting.",
             }, indent=2))]
         else:
@@ -194,7 +383,7 @@ async def call_tool(name: str, arguments: dict):
         text = arguments.get("text", "")
         parse_mode = arguments.get("parse_mode", "Markdown")
 
-        if ALLOWED_CHAT_IDS and str(chat_id) not in [str(c) for c in ALLOWED_CHAT_IDS]:
+        if not check_chat_allowed(chat_id):
             return [TextContent(type="text", text=json.dumps({
                 "error": f"Chat {chat_id} not in allowed list",
             }, indent=2))]
@@ -217,6 +406,62 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text", text=json.dumps({
                 "error": result.get("description", "Send failed"),
             }, indent=2))]
+
+    elif name == "telegram_send_video":
+        chat_id = arguments.get("chat_id")
+        video = arguments.get("video", "")
+        caption = arguments.get("caption")
+        parse_mode = arguments.get("parse_mode")
+
+        if not check_chat_allowed(chat_id):
+            return [TextContent(type="text", text=json.dumps({
+                "error": f"Chat {chat_id} not in allowed list",
+            }, indent=2))]
+
+        result = send_media("sendVideo", chat_id, "video", video, caption, parse_mode)
+        return _media_response(result, chat_id, "video")
+
+    elif name == "telegram_send_photo":
+        chat_id = arguments.get("chat_id")
+        photo = arguments.get("photo", "")
+        caption = arguments.get("caption")
+        parse_mode = arguments.get("parse_mode")
+
+        if not check_chat_allowed(chat_id):
+            return [TextContent(type="text", text=json.dumps({
+                "error": f"Chat {chat_id} not in allowed list",
+            }, indent=2))]
+
+        result = send_media("sendPhoto", chat_id, "photo", photo, caption, parse_mode)
+        return _media_response(result, chat_id, "photo")
+
+    elif name == "telegram_send_document":
+        chat_id = arguments.get("chat_id")
+        document = arguments.get("document", "")
+        caption = arguments.get("caption")
+        parse_mode = arguments.get("parse_mode")
+
+        if not check_chat_allowed(chat_id):
+            return [TextContent(type="text", text=json.dumps({
+                "error": f"Chat {chat_id} not in allowed list",
+            }, indent=2))]
+
+        result = send_media("sendDocument", chat_id, "document", document, caption, parse_mode)
+        return _media_response(result, chat_id, "document")
+
+    elif name == "telegram_send_animation":
+        chat_id = arguments.get("chat_id")
+        animation = arguments.get("animation", "")
+        caption = arguments.get("caption")
+        parse_mode = arguments.get("parse_mode")
+
+        if not check_chat_allowed(chat_id):
+            return [TextContent(type="text", text=json.dumps({
+                "error": f"Chat {chat_id} not in allowed list",
+            }, indent=2))]
+
+        result = send_media("sendAnimation", chat_id, "animation", animation, caption, parse_mode)
+        return _media_response(result, chat_id, "animation")
 
     elif name == "telegram_get_updates":
         limit = arguments.get("limit", 10)
