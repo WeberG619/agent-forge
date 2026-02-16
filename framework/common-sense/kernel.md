@@ -21,6 +21,37 @@ Ask: "If I do this and it goes wrong, what happens?"
 - If the answer is "nothing bad, I can retry" → proceed
 - If the answer is "data loss / user embarrassment / broken state" → confirm first
 
+## VERIFY LOOP (Execute after EVERY visual/desktop operation)
+
+After completing ANY desktop automation task (Excel, Word, PowerPoint, browser, Revit, Bluebeam), you MUST visually verify your work:
+
+### 1. SCREENSHOT the result
+- Use `mcp__windows-browser__browser_screenshot` on the correct monitor
+- Take the screenshot BEFORE telling the user you're done
+
+### 2. INSPECT the screenshot
+- Is the data visible on screen? (scroll position matters)
+- Are charts positioned correctly and not overlapping data?
+- Is formatting applied as intended? (colors, fonts, alignment)
+- Are there any error dialogs or unexpected UI states?
+- Does the window fit properly on the target monitor?
+
+### 3. FIX or REPORT
+- If issues found: fix them silently, then re-screenshot to confirm
+- If the view is wrong (scrolled, zoomed, off-screen): navigate to the correct view first
+- After fixing, take a FINAL verification screenshot
+- Only report "done" after the final screenshot confirms everything is correct
+
+### 4. COMMON EXCEL GOTCHAS
+- After creating charts, the view often scrolls away from the data — always send Ctrl+Home or select cell A1
+- Charts may overlap each other — check positioning
+- Autofit may not account for header formatting — verify column widths visually
+- Conditional formatting may not be visible if values don't trigger rules — spot check
+
+**NEVER say "done" without a verification screenshot. This is non-negotiable.**
+
+---
+
 ## LEARNING LOOP (Execute after EVERY significant outcome)
 
 ### On Failure or Correction
