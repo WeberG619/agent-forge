@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude-power-kit/hooks/pre-tool-use/pre_commit_guard.py",
+            "command": "python3 ~/.agent-forge/hooks/pre-tool-use/pre_commit_guard.py",
             "timeout": 10,
             "statusMessage": "Pre-commit guard..."
           }
@@ -31,12 +31,12 @@
   "mcpServers": {
     "claude-memory": {
       "command": "python3",
-      "args": ["~/.claude-power-kit/mcp-servers/claude-memory/src/server.py"],
+      "args": ["~/.agent-forge/mcp-servers/claude-memory/src/server.py"],
       "disabled": false
     },
     "voice": {
       "command": "python3",
-      "args": ["~/.claude-power-kit/mcp-servers/voice-mcp/server.py"],
+      "args": ["~/.agent-forge/mcp-servers/voice-mcp/server.py"],
       "disabled": false
     }
   }

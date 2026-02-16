@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude-power-kit/hooks/session-start/start_services.sh",
+            "command": "~/.agent-forge/hooks/session-start/start_services.sh",
             "timeout": 30,
             "statusMessage": "Starting background services..."
           }
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude-power-kit/hooks/pre-tool-use/pre_commit_guard.py",
+            "command": "python3 ~/.agent-forge/hooks/pre-tool-use/pre_commit_guard.py",
             "timeout": 10,
             "statusMessage": "Pre-commit guard..."
           }
@@ -49,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude-power-kit/hooks/pre-tool-use/mcp_seatbelt.py",
+            "command": "python3 ~/.agent-forge/hooks/pre-tool-use/mcp_seatbelt.py",
             "timeout": 5,
             "statusMessage": "MCP seatbelt check..."
           }
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude-power-kit/hooks/user-prompt/detect_correction.py",
+            "command": "python3 ~/.agent-forge/hooks/user-prompt/detect_correction.py",
             "timeout": 5,
             "statusMessage": "Checking for correction intent..."
           }
@@ -74,7 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude-power-kit/hooks/stop/session_save.py",
+            "command": "python3 ~/.agent-forge/hooks/stop/session_save.py",
             "timeout": 10,
             "statusMessage": "Saving session state..."
           }
@@ -85,29 +85,29 @@
   "mcpServers": {
     "claude-memory": {
       "command": "python3",
-      "args": ["~/.claude-power-kit/mcp-servers/claude-memory/src/server.py"],
+      "args": ["~/.agent-forge/mcp-servers/claude-memory/src/server.py"],
       "disabled": false
     },
     "voice": {
       "command": "python3",
-      "args": ["~/.claude-power-kit/mcp-servers/voice-mcp/server.py"],
+      "args": ["~/.agent-forge/mcp-servers/voice-mcp/server.py"],
       "disabled": false
     },
     "excel-mcp": {
       "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.claude-power-kit/mcp-servers/excel-mcp'; python server.py"],
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/excel-mcp'; python server.py"],
       "disabled": false,
       "_comment": "Windows only"
     },
     "word-mcp": {
       "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.claude-power-kit/mcp-servers/word-mcp'; python server.py"],
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/word-mcp'; python server.py"],
       "disabled": false,
       "_comment": "Windows only"
     },
     "powerpoint-mcp": {
       "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.claude-power-kit/mcp-servers/powerpoint-mcp'; python server.py"],
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/powerpoint-mcp'; python server.py"],
       "disabled": false,
       "_comment": "Windows only"
     }

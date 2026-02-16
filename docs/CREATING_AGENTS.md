@@ -1,6 +1,6 @@
 # Creating Custom Agents
 
-How to create your own specialized sub-agents for Claude Power Kit.
+How to create your own specialized sub-agents for Agent Forge.
 
 ## What is an Agent?
 
@@ -14,7 +14,7 @@ An agent is a markdown file that contains a system prompt for a specialized sub-
 
 Or in the power kit:
 ```
-~/.claude-power-kit/agents/my-agent.md
+~/.agent-forge/agents/my-agent.md
 ```
 
 ## Agent Template

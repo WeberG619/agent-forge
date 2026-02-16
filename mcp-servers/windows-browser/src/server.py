@@ -64,7 +64,7 @@ def run_powershell(script: str, capture_output: bool = True) -> tuple[str, str, 
         result = _ps_bridge(script)
         return result.stdout, result.stderr, result.returncode
     result = subprocess.run(
-        ["powershell.exe", "-NoProfile", "-Command", script],
+        ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script],
         capture_output=capture_output,
         text=True
     )

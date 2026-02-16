@@ -59,6 +59,7 @@ class PowerShellProcess:
                     [
                         "powershell.exe",
                         "-NoProfile",
+                        "-WindowStyle", "Hidden",
                         "-ExecutionPolicy", "Bypass",
                         "-File", SERVER_PS1_WIN,
                     ],

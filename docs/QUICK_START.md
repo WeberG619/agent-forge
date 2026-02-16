@@ -1,12 +1,12 @@
 # Quick Start Guide
 
-Get Claude Power Kit running in 5 minutes.
+Get Agent Forge running in 5 minutes.
 
 ## 1. Clone and Install
 
 ```bash
-git clone https://github.com/WeberG619/claude-power-kit.git
-cd claude-power-kit
+git clone https://github.com/WeberG619/agent-forge.git
+cd agent-forge
 ./install.sh
 ```
 

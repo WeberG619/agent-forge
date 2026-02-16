@@ -22,7 +22,7 @@ def main():
         sys.exit(0)
 
     # Save basic session info
-    install_dir = os.environ.get("CLAUDE_POWER_KIT_DIR", str(Path.home() / ".claude-power-kit"))
+    install_dir = os.environ.get("AGENT_FORGE_DIR", str(Path.home() / ".agent-forge"))
     session_file = Path(install_dir) / "session_state.json"
 
     try:

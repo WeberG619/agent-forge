@@ -1,6 +1,6 @@
 # Architecture
 
-How Claude Power Kit works under the hood.
+How Agent Forge works under the hood.
 
 ## System Overview
 

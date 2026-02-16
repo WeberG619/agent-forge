@@ -1,4 +1,4 @@
-# Claude Power Kit
+# Agent Forge
 
 > Turn Claude Code into an autonomous agent with memory, voice, desktop control, and a common sense engine.
 
@@ -21,8 +21,8 @@
 ## Quick Start
 
 ```bash
-git clone https://github.com/WeberG619/claude-power-kit.git
-cd claude-power-kit
+git clone https://github.com/WeberG619/agent-forge.git
+cd agent-forge
 ./install.sh
 ```
 
@@ -38,7 +38,7 @@ Restart Claude Code. That's it.
 ## What's Inside
 
 ```
-claude-power-kit/
+agent-forge/
 ├── framework/           # Core agent intelligence
 │   ├── strong-agent.md  # 5-phase sub-agent execution framework
 │   ├── agent-preamble.md # Context injection template

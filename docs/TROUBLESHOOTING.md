@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common issues and solutions for Claude Power Kit.
+Common issues and solutions for Agent Forge.
 
 ## Installation Issues
 
@@ -38,10 +38,10 @@ chmod +x install.sh
 
 ```bash
 # Check if dependencies are installed
-pip install -r ~/.claude-power-kit/mcp-servers/claude-memory/requirements.txt
+pip install -r ~/.agent-forge/mcp-servers/claude-memory/requirements.txt
 
 # Test the server manually
-python3 ~/.claude-power-kit/mcp-servers/claude-memory/src/server.py
+python3 ~/.agent-forge/mcp-servers/claude-memory/src/server.py
 ```
 
 ### Voice not working
@@ -111,19 +111,19 @@ Disable a specific hook by removing it from settings.json, or disable all hooks 
 
 ```bash
 # Check if already running
-python3 ~/.claude-power-kit/system-bridge/daemon.py --status
+python3 ~/.agent-forge/system-bridge/daemon.py --status
 
 # Start in foreground for debugging
-python3 ~/.claude-power-kit/system-bridge/daemon.py --console
+python3 ~/.agent-forge/system-bridge/daemon.py --console
 
 # Check logs
-cat ~/.claude-power-kit/system-bridge/daemon.log
+cat ~/.agent-forge/system-bridge/daemon.log
 ```
 
 ### live_state.json not updating
 
-1. Check daemon is running: `cat ~/.claude-power-kit/system-bridge/daemon.pid`
-2. Check health: `cat ~/.claude-power-kit/system-bridge/health.json`
+1. Check daemon is running: `cat ~/.agent-forge/system-bridge/daemon.pid`
+2. Check health: `cat ~/.agent-forge/system-bridge/health.json`
 3. On WSL, ensure PowerShell is accessible
 
 ## General Issues
@@ -151,7 +151,7 @@ The Power Kit adds context overhead. To reduce:
 ## Uninstalling
 
 ```bash
-cd /path/to/claude-power-kit
+cd /path/to/agent-forge
 ./uninstall.sh
 ```
 

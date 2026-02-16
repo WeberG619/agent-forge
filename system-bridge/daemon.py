@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude Power Kit - System Bridge Daemon
+Agent Forge - System Bridge Daemon
 Monitors system state and writes live_state.json for Claude Code context awareness.
 
 Supports: Windows (full), macOS (partial), Linux (partial)
@@ -24,7 +24,7 @@ import subprocess
 import platform
 
 # Configuration
-BASE_DIR = Path(os.environ.get("CLAUDE_POWER_KIT_DIR", str(Path.home() / ".claude-power-kit"))) / "system-bridge"
+BASE_DIR = Path(os.environ.get("AGENT_FORGE_DIR", str(Path.home() / ".agent-forge"))) / "system-bridge"
 STATE_FILE = BASE_DIR / "live_state.json"
 PID_FILE = BASE_DIR / "daemon.pid"
 HEALTH_FILE = BASE_DIR / "health.json"
@@ -114,7 +114,7 @@ class ClaudeDaemon:
         try:
             ps_exe = "powershell.exe" if "microsoft" in platform.release().lower() else "powershell"
             result = subprocess.run(
-                [ps_exe, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', cmd],
+                [ps_exe, '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-Command', cmd],
                 capture_output=True, text=True, timeout=timeout,
             )
             return result.stdout.strip() if result.stdout else None

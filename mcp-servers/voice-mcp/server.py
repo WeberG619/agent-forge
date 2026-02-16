@@ -184,7 +184,7 @@ class VoiceProcessor:
                         break
 
                 subprocess.run(
-                    ["powershell.exe", "-NoProfile", "-Command",
+                    ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command",
                      f'Add-Type -AssemblyName PresentationCore; '
                      f'$player = New-Object System.Windows.Media.MediaPlayer; '
                      f'$player.Open("{win_path}"); $player.Play(); '

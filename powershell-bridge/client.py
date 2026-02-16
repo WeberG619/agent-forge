@@ -115,7 +115,7 @@ def _direct_powershell(command: str, timeout: int = 30) -> PSResult:
     start = time.time()
     try:
         result = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-Command", command],
+            ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", command],
             capture_output=True,
             text=True,
             timeout=timeout,

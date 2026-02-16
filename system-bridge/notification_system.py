@@ -94,7 +94,7 @@ class NotificationEngine:
 
         try:
             subprocess.run(
-                ['powershell', '-Command', ps_script],
+                ['powershell', '-WindowStyle', 'Hidden', '-Command', ps_script],
                 capture_output=True, timeout=10
             )
             return True
@@ -111,7 +111,7 @@ class NotificationEngine:
         '''
 
         try:
-            subprocess.run(['powershell', '-Command', ps_script], capture_output=True, timeout=5)
+            subprocess.run(['powershell', '-WindowStyle', 'Hidden', '-Command', ps_script], capture_output=True, timeout=5)
         except Exception:
             pass
 

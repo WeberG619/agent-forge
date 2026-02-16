@@ -2,12 +2,12 @@
 set -e
 
 # ============================================================
-# Claude Power Kit - Installer
+# Agent Forge - Installer
 # ============================================================
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_INSTALL_DIR="$HOME/.claude-power-kit"
+DEFAULT_INSTALL_DIR="$HOME/.agent-forge"
 CLAUDE_DIR="$HOME/.claude"
 BACKUP_DIR="$CLAUDE_DIR/backup-$(date +%Y%m%d-%H%M%S)"
 
@@ -23,7 +23,7 @@ NC='\033[0m'
 print_header() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║     ${BOLD}Claude Power Kit Installer v${VERSION}${NC}${CYAN}      ║${NC}"
+    echo -e "${CYAN}║     ${BOLD}Agent Forge Installer v${VERSION}${NC}${CYAN}      ║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -300,11 +300,11 @@ do_install() {
     SHELL_RC="$HOME/.bashrc"
     [ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
 
-    if ! grep -q "CLAUDE_POWER_KIT_DIR" "$SHELL_RC" 2>/dev/null; then
+    if ! grep -q "AGENT_FORGE_DIR" "$SHELL_RC" 2>/dev/null; then
         echo "" >> "$SHELL_RC"
-        echo "# Claude Power Kit" >> "$SHELL_RC"
-        echo "export CLAUDE_POWER_KIT_DIR=\"$INSTALL_DIR\"" >> "$SHELL_RC"
-        print_step "Added CLAUDE_POWER_KIT_DIR to $SHELL_RC"
+        echo "# Agent Forge" >> "$SHELL_RC"
+        echo "export AGENT_FORGE_DIR=\"$INSTALL_DIR\"" >> "$SHELL_RC"
+        print_step "Added AGENT_FORGE_DIR to $SHELL_RC"
     fi
 
     echo ""
