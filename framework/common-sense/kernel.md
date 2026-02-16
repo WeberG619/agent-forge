@@ -25,9 +25,16 @@ Ask: "If I do this and it goes wrong, what happens?"
 
 After completing ANY desktop automation task (Excel, Word, PowerPoint, browser, Revit, Bluebeam), you MUST visually verify your work:
 
+### 0. KNOW YOUR MONITORS (before positioning ANY window)
+- ALWAYS call `mcp__windows-browser__get_monitors` before placing windows
+- NEVER guess monitor coordinates — DPI scaling (1.5x) shifts everything
+- After `MoveWindow`, IMMEDIATELY screenshot to confirm correct monitor
+- Monitor names in screenshot tool: left, center, right, primary
+
 ### 1. SCREENSHOT the result
 - Use `mcp__windows-browser__browser_screenshot` on the correct monitor
 - Take the screenshot BEFORE telling the user you're done
+- Screenshot IMMEDIATELY after window positioning to catch placement errors early
 
 ### 2. INSPECT the screenshot
 - Is the data visible on screen? (scroll position matters)
