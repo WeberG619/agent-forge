@@ -173,3 +173,7 @@ GPL-3.0 — see [LICENSE](LICENSE) for details.
 Built by [Weber Gouin](https://github.com/WeberG619) at BIM Ops Studio.
 
 Powered by [Claude Code](https://claude.com/claude-code) by Anthropic.
+
+---
+
+*Agent Forge is an independent community project. It is not affiliated with, endorsed by, or officially connected to Anthropic, PBC. "Claude" and "Claude Code" are trademarks of Anthropic.*
