@@ -11,12 +11,7 @@
       "Bash(git:*)",
       "Bash(dotnet:*)",
       "mcp__claude-memory__*",
-      "mcp__voice__*",
-      "mcp__excel-mcp__*",
-      "mcp__word-mcp__*",
-      "mcp__powerpoint-mcp__*",
-      "mcp__visual-memory__*",
-      "mcp__financial-mcp__*"
+      "mcp__voice__*"
     ]
   },
   "hooks": {
@@ -41,17 +36,6 @@
             "command": "python3 ~/.agent-forge/hooks/pre-tool-use/pre_commit_guard.py",
             "timeout": 10,
             "statusMessage": "Pre-commit guard..."
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.agent-forge/hooks/pre-tool-use/mcp_seatbelt.py",
-            "timeout": 5,
-            "statusMessage": "MCP seatbelt check..."
           }
         ]
       }
@@ -93,23 +77,20 @@
       "args": ["~/.agent-forge/mcp-servers/voice-mcp/server.py"],
       "disabled": false
     },
-    "excel-mcp": {
-      "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/excel-mcp'; python server.py"],
+    "windows-browser": {
+      "command": "python3",
+      "args": ["~/.agent-forge/mcp-servers/windows-browser/src/server.py"],
       "disabled": false,
-      "_comment": "Windows only"
+      "_comment": "Windows/WSL only - browser automation via CDP"
     },
-    "word-mcp": {
-      "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/word-mcp'; python server.py"],
-      "disabled": false,
-      "_comment": "Windows only"
-    },
-    "powerpoint-mcp": {
-      "command": "powershell.exe",
-      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '~/.agent-forge/mcp-servers/powerpoint-mcp'; python server.py"],
-      "disabled": false,
-      "_comment": "Windows only"
+    "telegram-mcp": {
+      "command": "python3",
+      "args": ["~/.agent-forge/mcp-servers/telegram-mcp/server.py"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "YOUR_BOT_TOKEN_HERE"
+      },
+      "disabled": true,
+      "_comment": "Enable and set bot token for Telegram integration"
     }
   }
 }

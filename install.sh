@@ -54,7 +54,7 @@ preflight_checks() {
 
     # Python
     if command -v python3 &>/dev/null; then
-        PY_VERSION=$(python3 --version 2>&1 | grep -oP '\d+\.\d+')
+        PY_VERSION=$(python3 --version 2>&1 | grep -oE '[0-9]+\.[0-9]+')
         print_step "Python 3 found ($PY_VERSION)"
     else
         print_error "Python 3 not found. Please install Python 3.8+"

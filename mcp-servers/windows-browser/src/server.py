@@ -321,7 +321,9 @@ def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
         filename = f"screenshot_{monitor}_{timestamp}.jpg"
 
     filepath = os.path.join(SCREENSHOT_DIR, filename)
-    win_path = filepath.replace("/mnt/d", "D:")
+    # Convert WSL path to Windows path generically
+    import re
+    win_path = re.sub(r'^/mnt/([a-z])/', lambda m: m.group(1).upper() + ':\\\\', filepath).replace('/', '\\')
 
     script = f"""
     # NO SetProcessDPIAware - keep virtual coordinates to match click_at()
@@ -356,12 +358,18 @@ def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
         return None, 0, 0
 
 AHK_EXE = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+
+def _wsl_to_win(path):
+    """Convert WSL path to Windows path generically."""
+    import re
+    return re.sub(r'^/mnt/([a-z])/', lambda m: m.group(1).upper() + ':\\\\', path).replace('/', '\\')
+
 AHK_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "click.ahk")
-AHK_SCRIPT_WIN = AHK_SCRIPT.replace("/mnt/d", "D:").replace("/", "\\")
+AHK_SCRIPT_WIN = _wsl_to_win(AHK_SCRIPT)
 AHK_SENDKEYS_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sendkeys.ahk")
-AHK_SENDKEYS_SCRIPT_WIN = AHK_SENDKEYS_SCRIPT.replace("/mnt/d", "D:").replace("/", "\\")
+AHK_SENDKEYS_SCRIPT_WIN = _wsl_to_win(AHK_SENDKEYS_SCRIPT)
 AHK_SCROLL_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scroll.ahk")
-AHK_SCROLL_SCRIPT_WIN = AHK_SCROLL_SCRIPT.replace("/mnt/d", "D:").replace("/", "\\")
+AHK_SCROLL_SCRIPT_WIN = _wsl_to_win(AHK_SCROLL_SCRIPT)
 
 def click_at(x: int, y: int, monitor: str = None, action: str = "click") -> dict:
     """Click at coordinates relative to a monitor's screenshot using AutoHotkey.

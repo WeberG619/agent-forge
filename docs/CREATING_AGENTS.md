@@ -12,7 +12,7 @@ An agent is a markdown file that contains a system prompt for a specialized sub-
 ~/.claude/agents/my-agent.md
 ```
 
-Or in the power kit:
+Or in Agent Forge:
 ```
 ~/.agent-forge/agents/my-agent.md
 ```

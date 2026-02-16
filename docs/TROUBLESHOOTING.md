@@ -143,7 +143,7 @@ ls ~/.claude/commands/
 
 ### Context window filling up fast
 
-The Power Kit adds context overhead. To reduce:
+Agent Forge adds context overhead. To reduce:
 1. Remove MCP servers you don't use from settings.local.json
 2. Simplify CLAUDE.md — remove sections you don't need
 3. Use `/compact` when context gets large
@@ -155,4 +155,4 @@ cd /path/to/agent-forge
 ./uninstall.sh
 ```
 
-This removes all Power Kit files and optionally restores your backup configuration.
+This removes all Agent Forge files and optionally restores your backup configuration.

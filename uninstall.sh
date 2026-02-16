@@ -47,7 +47,7 @@ if [ -f "$INSTALL_DIR/system-bridge/daemon.pid" ]; then
     fi
 fi
 
-# Remove installed agents (only ones that came from power-kit)
+# Remove installed agents (only ones that came from agent-forge)
 POWERKIT_AGENTS=(
     orchestrator.md learning-agent.md agent-builder.md code-architect.md
     python-engineer.md fullstack-dev.md csharp-developer.md ml-engineer.md

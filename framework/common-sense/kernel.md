@@ -30,7 +30,6 @@ After completing ANY desktop automation task (Excel, Word, PowerPoint, browser, 
 - **NEVER use `ShowWindow(SW_MAXIMIZE)`** — it spans across multiple monitors
 - **ALWAYS use DPI-aware PowerShell** — call `SetProcessDPIAware()` BEFORE `SetWindowPos()`
 - **ALWAYS use `SetWindowPos` to fill monitor** — same visual as maximize, no spanning
-- See `/mnt/d/_CLAUDE-TOOLS/WINDOW_MANAGEMENT.md` for the correct code pattern
 - Monitor mapping: left=DISPLAY3(x=-5120), center=DISPLAY2(x=-2560), right/primary=DISPLAY1(x=0)
 - Screenshot tool names: `left`, `center`, `right`, `primary`
 - After positioning, IMMEDIATELY screenshot to confirm correct monitor
