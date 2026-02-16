@@ -1,0 +1,3 @@
+# Autonomous Agent Dependencies
+# aiohttp is optional - only needed for Telegram notifications
+aiohttp>=3.9.0

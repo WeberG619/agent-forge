@@ -1,0 +1,58 @@
+{
+  "mcpServers": {
+    "claude-memory": {
+      "command": "python3",
+      "args": ["{{INSTALL_DIR}}/mcp-servers/claude-memory/src/server.py"],
+      "disabled": false,
+      "_comment": "Long-term memory - corrections, facts, decisions persist across sessions"
+    },
+    "voice": {
+      "command": "{{VOICE_COMMAND}}",
+      "args": {{VOICE_ARGS}},
+      "disabled": {{VOICE_DISABLED}},
+      "_comment": "Edge TTS voice output with SAPI fallback"
+    },
+    "windows-browser": {
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '{{INSTALL_DIR_WIN}}\\mcp-servers\\windows-browser'; python server.py"],
+      "disabled": {{BROWSER_DISABLED}},
+      "_comment": "Edge CDP browser automation - Windows only"
+    },
+    "sqlite-server": {
+      "command": "python3",
+      "args": ["{{INSTALL_DIR}}/mcp-servers/sqlite-server/server.py"],
+      "disabled": {{SQLITE_DISABLED}},
+      "_comment": "SQLite database MCP"
+    },
+    "excel-mcp": {
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '{{INSTALL_DIR_WIN}}\\mcp-servers\\excel-mcp'; python server.py"],
+      "disabled": {{EXCEL_DISABLED}},
+      "_comment": "Excel automation via COM - Windows only"
+    },
+    "word-mcp": {
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '{{INSTALL_DIR_WIN}}\\mcp-servers\\word-mcp'; python server.py"],
+      "disabled": {{WORD_DISABLED}},
+      "_comment": "Word automation via COM - Windows only"
+    },
+    "powerpoint-mcp": {
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "cd '{{INSTALL_DIR_WIN}}\\mcp-servers\\powerpoint-mcp'; python server.py"],
+      "disabled": {{PPT_DISABLED}},
+      "_comment": "PowerPoint automation via COM - Windows only"
+    },
+    "visual-memory": {
+      "command": "python3",
+      "args": ["{{INSTALL_DIR}}/mcp-servers/visual-memory/server.py"],
+      "disabled": {{VISUAL_MEMORY_DISABLED}},
+      "_comment": "Screenshot-based visual memory"
+    },
+    "financial-mcp": {
+      "command": "python3",
+      "args": ["{{INSTALL_DIR}}/mcp-servers/financial-mcp/server.py"],
+      "disabled": {{FINANCIAL_DISABLED}},
+      "_comment": "Stock market analysis - educational purposes"
+    }
+  }
+}

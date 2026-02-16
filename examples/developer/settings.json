@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(dotnet:*)",
+      "mcp__claude-memory__*",
+      "mcp__voice__*"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude-power-kit/hooks/pre-tool-use/pre_commit_guard.py",
+            "timeout": 10,
+            "statusMessage": "Pre-commit guard..."
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "claude-memory": {
+      "command": "python3",
+      "args": ["~/.claude-power-kit/mcp-servers/claude-memory/src/server.py"],
+      "disabled": false
+    },
+    "voice": {
+      "command": "python3",
+      "args": ["~/.claude-power-kit/mcp-servers/voice-mcp/server.py"],
+      "disabled": false
+    }
+  }
+}

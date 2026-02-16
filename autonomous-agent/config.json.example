@@ -1,0 +1,28 @@
+{
+    "watch_folders": [
+        {
+            "path": "/path/to/Downloads",
+            "patterns": ["*.pdf"],
+            "action": "process_pdf",
+            "description": "Process new PDFs in Downloads"
+        },
+        {
+            "path": "/path/to/client/folder",
+            "patterns": ["*.pdf", "*.xlsx", "*.docx"],
+            "action": "notify_new_client_file",
+            "description": "Alert on new client files"
+        }
+    ],
+    "priority_senders": [
+        {
+            "email": "boss@company.com",
+            "name": "Boss Name",
+            "priority": "critical"
+        },
+        {
+            "email": "client@example.com",
+            "name": "Client Name",
+            "priority": "high"
+        }
+    ]
+}

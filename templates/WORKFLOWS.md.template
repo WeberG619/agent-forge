@@ -1,0 +1,47 @@
+# {{USER_NAME}}'s Workflows
+
+> Personal workflow configuration for Claude Code.
+> Edit this file to customize Claude's behavior for your projects.
+
+---
+
+## Projects
+
+Add your active projects here:
+
+| Project | Path | Stack | Notes |
+|---------|------|-------|-------|
+| example-project | ~/projects/example | Python/FastAPI | Main project |
+
+---
+
+## Contacts
+
+Add contacts Claude should know about:
+
+| Name | Email | Context |
+|------|-------|---------|
+| {{USER_NAME}} | your@email.com | Primary |
+
+---
+
+## Custom Rules
+
+Add project-specific rules here:
+
+```
+- When working on [project], always [rule]
+- For [language] projects, prefer [convention]
+- Never [thing to avoid]
+```
+
+---
+
+## Slash Command Overrides
+
+Override default command behavior here:
+
+```
+- /commit: Always include ticket number from branch name
+- /voice: Use "jenny" voice instead of default
+```

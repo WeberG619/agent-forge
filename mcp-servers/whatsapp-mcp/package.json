@@ -1,0 +1,26 @@
+{
+  "name": "whatsapp-mcp",
+  "version": "2.0.0",
+  "description": "WhatsApp MCP server for Claude Code using Baileys (no browser needed)",
+  "main": "server.js",
+  "bin": {
+    "whatsapp-mcp": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "mcp",
+    "claude",
+    "baileys"
+  ],
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@whiskeysockets/baileys": "^6.7.16",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

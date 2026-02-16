@@ -1,0 +1,141 @@
+{
+  "version": "1.0",
+  "description": "Pre-built corrections that every agent should know. These are universal 'hot stoves' — mistakes so common they should be loaded before any agent touches anything.",
+  "corrections": [
+    {
+      "id": "fs-001",
+      "domain": "filesystem",
+      "what_went_wrong": "Deleted/overwritten a file without checking if it was tracked or important",
+      "correct_approach": "Always check git status or file importance before delete/overwrite. If untracked and user-created, confirm before removing.",
+      "detection": "Any action involving rm, delete, overwrite, or truncate",
+      "severity": "high",
+      "tags": ["destructive", "filesystem", "universal"]
+    },
+    {
+      "id": "fs-002",
+      "domain": "filesystem",
+      "what_went_wrong": "Assumed a path existed without verifying",
+      "correct_approach": "Check that directories and files exist before writing to them or referencing them. Paths change between machines, projects, and sessions.",
+      "detection": "Any file write, copy, or move operation",
+      "severity": "medium",
+      "tags": ["paths", "filesystem", "universal"]
+    },
+    {
+      "id": "fs-003",
+      "domain": "filesystem",
+      "what_went_wrong": "Modified a file without reading it first",
+      "correct_approach": "Always read the current state of a file before editing. The file may have changed since you last saw it, or may not contain what you expect.",
+      "detection": "Any edit or write operation",
+      "severity": "high",
+      "tags": ["filesystem", "editing", "universal"]
+    },
+    {
+      "id": "git-001",
+      "domain": "git",
+      "what_went_wrong": "Force-pushed to main/master or a shared branch",
+      "correct_approach": "Never force-push to shared branches. Use feature branches. If you must force-push, confirm with the user and ensure no one else has pushed.",
+      "detection": "git push --force, git push -f, targeting main/master",
+      "severity": "critical",
+      "tags": ["git", "destructive", "shared-state"]
+    },
+    {
+      "id": "git-002",
+      "domain": "git",
+      "what_went_wrong": "Committed secrets, credentials, or .env files",
+      "correct_approach": "Check staged files for secrets before committing. Never stage .env, credentials.json, API keys, or token files.",
+      "detection": "git add, git commit with sensitive file patterns",
+      "severity": "critical",
+      "tags": ["git", "security", "universal"]
+    },
+    {
+      "id": "git-003",
+      "domain": "git",
+      "what_went_wrong": "Used git reset --hard or checkout . and lost uncommitted work",
+      "correct_approach": "Before any destructive git operation, check for uncommitted changes with git status. Stash or commit first.",
+      "detection": "git reset --hard, git checkout ., git clean",
+      "severity": "high",
+      "tags": ["git", "destructive", "universal"]
+    },
+    {
+      "id": "net-001",
+      "domain": "network",
+      "what_went_wrong": "Sent a message/email/request to the wrong recipient or endpoint",
+      "correct_approach": "Always verify the recipient, URL, or endpoint before sending. Display it to the user for confirmation on first use.",
+      "detection": "Any outbound communication — email, API call, webhook, chat message",
+      "severity": "high",
+      "tags": ["communication", "shared-state", "universal"]
+    },
+    {
+      "id": "net-002",
+      "domain": "network",
+      "what_went_wrong": "Made API calls in a loop without rate limiting or bounds",
+      "correct_approach": "Add delays between API calls. Set a maximum iteration count. Check response codes before continuing.",
+      "detection": "Loops containing API calls or network requests",
+      "severity": "medium",
+      "tags": ["api", "network", "universal"]
+    },
+    {
+      "id": "exec-001",
+      "domain": "execution",
+      "what_went_wrong": "Retried the same failing approach multiple times expecting different results",
+      "correct_approach": "If something fails twice with the same approach, stop. Investigate the root cause. Try a fundamentally different approach or escalate to the user.",
+      "detection": "Same command or action attempted 3+ times",
+      "severity": "medium",
+      "tags": ["execution", "debugging", "universal"]
+    },
+    {
+      "id": "exec-002",
+      "domain": "execution",
+      "what_went_wrong": "Ran a long-running or resource-intensive operation without warning the user",
+      "correct_approach": "If an operation might take more than 30 seconds or consume significant resources, tell the user before starting. Offer to run in background.",
+      "detection": "Large builds, full test suites, big file operations, model training",
+      "severity": "low",
+      "tags": ["execution", "ux", "universal"]
+    },
+    {
+      "id": "scope-001",
+      "domain": "scope",
+      "what_went_wrong": "Made changes beyond what was requested — added features, refactored unrelated code, 'improved' things that weren't asked for",
+      "correct_approach": "Do exactly what was asked. Don't add error handling for impossible cases, don't refactor adjacent code, don't add comments to unchanged functions. Minimal diff.",
+      "detection": "Changes to files or functions not mentioned in the request",
+      "severity": "medium",
+      "tags": ["scope", "discipline", "universal"]
+    },
+    {
+      "id": "scope-002",
+      "domain": "scope",
+      "what_went_wrong": "Created new files when editing existing ones would have been better",
+      "correct_approach": "Prefer editing existing files. Only create new files when the functionality truly doesn't belong in any existing file.",
+      "detection": "File creation — ask 'does this belong in an existing file?'",
+      "severity": "low",
+      "tags": ["scope", "filesystem", "universal"]
+    },
+    {
+      "id": "deploy-001",
+      "domain": "deployment",
+      "what_went_wrong": "Deployed to the wrong environment, path, or target",
+      "correct_approach": "Always verify the deployment target. Check project-specific corrections for known-good paths. Confirm with user on first deploy.",
+      "detection": "Any copy, deploy, publish, or install action",
+      "severity": "critical",
+      "tags": ["deployment", "destructive", "universal"]
+    },
+    {
+      "id": "data-001",
+      "domain": "data",
+      "what_went_wrong": "Dropped, truncated, or overwrote a database table without backup",
+      "correct_approach": "Before any destructive database operation, confirm the table name, check row count, and ask the user. Offer to export first.",
+      "detection": "DROP TABLE, TRUNCATE, DELETE without WHERE, bulk UPDATE",
+      "severity": "critical",
+      "tags": ["database", "destructive", "universal"]
+    },
+    {
+      "id": "auth-001",
+      "domain": "identity",
+      "what_went_wrong": "Used the wrong name, email, or identity when acting on behalf of the user",
+      "correct_approach": "Always use the user's configured name and email. Check stored preferences. Never guess or use defaults from the system.",
+      "detection": "Any action that includes user identity — commits, emails, signatures",
+      "severity": "high",
+      "tags": ["identity", "communication", "universal"]
+    }
+  ]
+}

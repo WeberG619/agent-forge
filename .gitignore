@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Runtime
+*.log
+*.pid
+*.db
+*.sqlite
+audio_cache/
+*.wav
+*.mp3
+
+# Secrets
+.env
+.env.*
+credentials.json
+*.pem
+*.key
+
+# Generated
+live_state.json
+health.json
+events.ndjson*
+daemon.log
