@@ -25,11 +25,15 @@ Ask: "If I do this and it goes wrong, what happens?"
 
 After completing ANY desktop automation task (Excel, Word, PowerPoint, browser, Revit, Bluebeam), you MUST visually verify your work:
 
-### 0. KNOW YOUR MONITORS (before positioning ANY window)
-- ALWAYS call `mcp__windows-browser__get_monitors` before placing windows
-- NEVER guess monitor coordinates — DPI scaling (1.5x) shifts everything
-- After `MoveWindow`, IMMEDIATELY screenshot to confirm correct monitor
-- Monitor names in screenshot tool: left, center, right, primary
+### 0. POSITION WINDOWS CORRECTLY (before ANY desktop work)
+- **NEVER use `mcp__windows-browser__window_move`** — it is NOT DPI-aware and places windows on wrong monitors
+- **NEVER use `ShowWindow(SW_MAXIMIZE)`** — it spans across multiple monitors
+- **ALWAYS use DPI-aware PowerShell** — call `SetProcessDPIAware()` BEFORE `SetWindowPos()`
+- **ALWAYS use `SetWindowPos` to fill monitor** — same visual as maximize, no spanning
+- See `/mnt/d/_CLAUDE-TOOLS/WINDOW_MANAGEMENT.md` for the correct code pattern
+- Monitor mapping: left=DISPLAY3(x=-5120), center=DISPLAY2(x=-2560), right/primary=DISPLAY1(x=0)
+- Screenshot tool names: `left`, `center`, `right`, `primary`
+- After positioning, IMMEDIATELY screenshot to confirm correct monitor
 
 ### 1. SCREENSHOT the result
 - Use `mcp__windows-browser__browser_screenshot` on the correct monitor
@@ -49,11 +53,13 @@ After completing ANY desktop automation task (Excel, Word, PowerPoint, browser, 
 - After fixing, take a FINAL verification screenshot
 - Only report "done" after the final screenshot confirms everything is correct
 
-### 4. COMMON EXCEL GOTCHAS
-- After creating charts, the view often scrolls away from the data — always send Ctrl+Home or select cell A1
-- Charts may overlap each other — check positioning
-- Autofit may not account for header formatting — verify column widths visually
-- Conditional formatting may not be visible if values don't trigger rules — spot check
+### 4. COMMON DESKTOP GOTCHAS
+- **Focus before keys:** `browser_send_keys` goes to WHATEVER has focus — use `SetForegroundWindow` first, verify with screenshot
+- **Excel scroll:** After creating charts, the view scrolls away — always navigate to A1 after chart creation
+- **Excel charts:** Charts may overlap each other — check positioning visually
+- **Excel autofit:** May not account for header formatting — verify column widths visually
+- **Conditional formatting:** May not be visible if values don't trigger rules — spot check
+- **COM launch:** Use `New-Object -ComObject Excel.Application` not `Start-Process excel.exe` for reliable COM binding
 
 **NEVER say "done" without a verification screenshot. This is non-negotiable.**
 
