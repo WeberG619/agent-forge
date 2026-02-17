@@ -1,22 +1,17 @@
 # Agent Forge
 
-> Turn Claude Code into an autonomous agent with memory, voice, desktop control, and a common sense engine.
+**Production-grade agent framework for Claude Code.**
+17 sub-agents. Persistent memory. Desktop automation. Common sense engine.
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub stars](https://img.shields.io/github/stars/WeberG619/agent-forge?style=flat-square)](https://github.com/WeberG619/agent-forge/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/WeberG619/agent-forge?style=flat-square)](https://github.com/WeberG619/agent-forge/network/members)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776AB.svg?style=flat-square)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](#requirements)
+
+Built by a BIM automation specialist who needed AI agents that actually work in real professional workflows.
 
 ---
-
-## What You Get
-
-- **Long-term memory** that persists across sessions — Claude remembers your corrections, decisions, and project context
-- **17 specialized sub-agents** for code analysis, architecture, ML, DevOps, and more
-- **Common sense engine** that prevents destructive mistakes before they happen
-- **Voice output** — hear Claude speak summaries and announcements via Edge TTS
-- **Desktop automation** — control Excel, Word, PowerPoint, and browser via MCP
-- **20+ slash commands** for power workflows (`/commit`, `/delegate`, `/review-and-fix`, etc.)
-- **System bridge** — Claude sees your open apps, monitors, clipboard, and recent files in real-time
-- **8 Claude.ai Skills** — idea validation, product design, marketing, and more
-- **Extensible** — add your own agents, skills, hooks, and MCP servers
 
 ## Quick Start
 
@@ -26,7 +21,127 @@ cd agent-forge
 ./install.sh
 ```
 
-Restart Claude Code. That's it.
+Restart Claude Code. You now have memory, 17 sub-agents, 22 slash commands, safety hooks, and a common sense engine.
+
+---
+
+## What It Looks Like
+
+```
+you: Open the project spreadsheet, pull the cost data, and build a summary deck
+
+Claude Code ─── delegating to orchestrator agent
+  ├─ memory_smart_recall("project spreadsheet, cost data")
+  │   └─ Found: project_costs.xlsx on D:\Projects\TAJ
+  │
+  ├─ launching sub-agent: excel-automation
+  │   ├─ open_workbook("D:\Projects\TAJ\project_costs.xlsx")
+  │   ├─ read_range("Sheet1", "A1:F48")
+  │   └─ ✓ Extracted 48 line items, $2.4M total
+  │
+  ├─ launching sub-agent: powerpoint-builder
+  │   ├─ create_presentation()
+  │   ├─ add_slide("Cost Summary", table_data)
+  │   ├─ add_slide("Budget vs Actual", chart_data)
+  │   └─ save_as("TAJ_Cost_Summary.pptx")
+  │
+  ├─ memory_store("TAJ cost summary created", project="TAJ")
+  └─ voice: "Done. 3-slide deck saved. Total budget is 2.4 million, 12% under estimate."
+
+✓ Task complete in 34 seconds
+```
+
+---
+
+## Features
+
+### Core Intelligence
+- **Strong Agent Framework** -- 5-phase execution: Orient, Investigate, Execute, Verify, Report
+- **Common Sense Engine** -- pre-action safety checks against past mistakes, blocks destructive operations
+- **Persistent Memory** -- corrections, decisions, facts, and preferences survive across sessions
+- **17 Sub-Agents** -- code analysis, architecture, ML, DevOps, full-stack, C#, Python, and more
+
+### Desktop Automation
+- **Excel** -- read, write, charts, formulas, pivot tables via COM automation
+- **Word / PowerPoint** -- document and presentation generation
+- **Browser** -- Edge CDP control: navigate, screenshot, type, scroll, click
+- **System Bridge** -- real-time awareness of open apps, monitors, clipboard, recent files
+
+### Developer Workflow
+- **22 Slash Commands** -- `/commit`, `/delegate`, `/review-and-fix`, `/prime`, `/fix-and-commit`, etc.
+- **Safety Hooks** -- pre-commit guards, MCP seatbelts, secret detection
+- **8 Claude.ai Skills** -- idea validation, product design, marketing, competitive analysis
+
+### Integrations
+- **Voice/TTS** -- Claude speaks summaries and announcements via Edge TTS
+- **SQLite** -- structured data storage via MCP
+- **Financial** -- stock analysis, portfolio tracking, market data
+- **AI Render** -- Flux Pro photorealistic rendering from text prompts
+
+---
+
+## Architecture
+
+```
+ You
+  │
+  ▼
+┌──────────────────────────────────────────────────────┐
+│  Claude Code                                         │
+│                                                      │
+│  ┌──────────────────────────────────────────┐        │
+│  │  Agent Forge                              │       │
+│  │                                           │       │
+│  │  ┌─────────────┐  ┌──────────────────┐   │       │
+│  │  │ Strong Agent │  │  Common Sense    │   │       │
+│  │  │  Framework   │  │    Engine        │   │       │
+│  │  └──────┬──────┘  └────────┬─────────┘   │       │
+│  │         │                  │              │       │
+│  │  ┌──────┴──────────────────┴─────────┐   │       │
+│  │  │        Memory System              │   │       │
+│  │  │  corrections · facts · decisions  │   │       │
+│  │  └──────────────────────────────────-┘   │       │
+│  └──────────────┬────────────────────────────┘       │
+│                 │                                     │
+│    ┌────────────┼────────────┐                       │
+│    ▼            ▼            ▼                        │
+│ 17 Agents   22 Commands   Hooks                      │
+└────┬────────────┬────────────┬───────────────────────┘
+     │            │            │
+     ▼            ▼            ▼
+  MCP Servers  System Bridge  Voice/TTS
+  (Excel, Word, Browser,      (Edge TTS)
+   SQLite, Financial,
+   AI Render)
+```
+
+---
+
+## How It Compares
+
+Scored on real-world capability depth across 12 categories ([full interactive comparison](docs/comparison-openclaw.html)):
+
+| Category | Agent Forge | OpenClaw |
+|---|:---:|:---:|
+| Desktop Automation | **10**/10 | 6/10 |
+| Memory System | **10**/10 | 5/10 |
+| Sub-Agent System | **10**/10 | 4/10 |
+| Safety / Common Sense | **10**/10 | 3/10 |
+| Developer Workflow | **10**/10 | 5/10 |
+| BIM / CAD / Engineering | **10**/10 | 0/10 |
+| **Total (12 categories)** | **99/120** | **58/120** |
+
+---
+
+## Configuration Tiers
+
+| Tier | What's Included |
+|---|---|
+| **Minimal** | Framework + commands + agent definitions. No MCP servers. |
+| **Developer** | Framework + memory + voice + git hooks. Good for most developers. |
+| **Power User** | Everything. Desktop automation, system bridge, all MCP servers. |
+
+See [`examples/`](examples/) for ready-to-use configurations for each tier.
 
 ## Requirements
 
@@ -35,122 +150,15 @@ Restart Claude Code. That's it.
 - Python 3.8+
 - Windows 10/11 (for desktop automation features) or macOS/Linux (core features)
 
-## What's Inside
+## Documentation
 
-```
-agent-forge/
-├── framework/           # Core agent intelligence
-│   ├── strong-agent.md  # 5-phase sub-agent execution framework
-│   ├── agent-preamble.md # Context injection template
-│   └── common-sense/    # Decision loop + safety corrections
-├── agents/              # 17 ready-to-use sub-agent definitions
-├── skills/              # 8 Claude.ai skill files
-├── commands/            # 20+ slash commands
-├── hooks/               # Safety hooks (pre-commit guard, MCP seatbelt, etc.)
-├── system-bridge/       # Live system state monitoring daemon
-├── mcp-servers/         # MCP server source code
-├── templates/           # User config templates
-├── examples/            # Minimal, developer, and power-user configs
-└── docs/                # Full documentation
-```
-
-## Components
-
-### Core (always installed)
-
-| Component | Description |
-|-----------|-------------|
-| **Strong Agent Framework** | 5-phase execution methodology for sub-agents (Orient → Investigate → Execute → Verify → Report) |
-| **Common Sense Engine** | Pre-action safety checks against past mistakes. Blocks destructive operations, warns on risky ones. |
-| **Slash Commands** | `/commit`, `/delegate`, `/prime`, `/review-and-fix`, `/fix-and-commit`, and more |
-| **Agent Definitions** | Pre-built system prompts for 17 specialized sub-agents |
-
-### Optional
-
-| Component | Platform | Description |
-|-----------|----------|-------------|
-| **Memory System** | All | Long-term memory MCP server — corrections, facts, decisions persist across sessions |
-| **Voice/TTS** | All (best on Windows) | Edge TTS with SAPI fallback — Claude speaks summaries aloud |
-| **Browser Automation** | Windows | Edge CDP WebSocket control — navigate, screenshot, type, scroll |
-| **Excel MCP** | Windows | Full Excel automation via COM — read, write, charts, formulas |
-| **Word MCP** | Windows | Word document automation via COM |
-| **PowerPoint MCP** | Windows | PowerPoint automation via COM |
-| **System Bridge** | Windows | Real-time monitoring daemon — open apps, monitors, clipboard, recent files |
-| **SQLite Server** | All | SQLite database MCP for structured data |
-| **AI Render** | All | Flux Pro photorealistic rendering |
-| **Financial MCP** | All | Stock market analysis and portfolio tracking |
-
-## How It Works
-
-### The Common Sense Engine
-
-Before every significant action, Claude runs a 3-step check:
-
-1. **Classify** — Is this reversible? Does it affect shared systems?
-2. **Check experience** — Have I made this mistake before? Does a correction exist?
-3. **Simulate** — If this goes wrong, what happens?
-
-Pre-loaded with 15 universal safety corrections (git secrets, force-push protection, data loss prevention, etc.) and learns new ones from your feedback.
-
-### The Strong Agent Framework
-
-Sub-agents follow a structured 5-phase methodology:
-
-1. **Load Context** — Check memory for relevant corrections and past decisions
-2. **Orient** — Parse the task, assess scope, rate confidence
-3. **Investigate** — Read files, search patterns, map dependencies
-4. **Execute** — Make changes in small steps, match existing style
-5. **Report** — Summarize results, store learnings in memory
-
-### Memory System
-
-Claude remembers across sessions:
-- **Corrections** — mistakes it made and how to avoid them
-- **Decisions** — architectural choices and their rationale
-- **Facts** — project-specific knowledge
-- **Preferences** — your coding style and workflow preferences
-
-## Customization
-
-### Add your own agent
-
-Create `~/.claude/agents/my-agent.md`:
-
-```markdown
-name: my-agent
-description: Specialized agent for my use case
-
-You are a specialized agent for [domain].
-Your responsibilities:
-1. ...
-2. ...
-```
-
-### Add your own slash command
-
-Create `~/.claude/commands/my-command.md`:
-
-```markdown
----
-description: What this command does
----
-
-# My Command
-
-Instructions for Claude when user runs /my-command...
-```
-
-### Add your own hook
-
-See [docs/HOOKS.md](docs/HOOKS.md) for the full hook system guide.
-
-## Examples
-
-Three example configurations are included:
-
-- **`examples/minimal/`** — Just the framework and commands. No MCP servers.
-- **`examples/developer/`** — Framework + memory + voice + git hooks. Good for most developers.
-- **`examples/power-user/`** — Everything enabled. Desktop automation, system bridge, all MCP servers.
+- [Quick Start Guide](docs/QUICK_START.md)
+- [Architecture Deep Dive](docs/ARCHITECTURE.md)
+- [Creating Custom Agents](docs/CREATING_AGENTS.md)
+- [Creating Skills](docs/CREATING_SKILLS.md)
+- [Hook System](docs/HOOKS.md)
+- [MCP Server Reference](docs/MCP_SERVERS.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Uninstall
 
@@ -158,21 +166,23 @@ Three example configurations are included:
 ./uninstall.sh
 ```
 
-Removes all installed files and restores your original Claude Code configuration (backup is created during install).
-
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-GPL-3.0 — see [LICENSE](LICENSE) for details.
+GPL-3.0 -- see [LICENSE](LICENSE) for details.
 
 ## Credits
 
 Built by [Weber Gouin](https://github.com/WeberG619) at BIM Ops Studio.
 
 Powered by [Claude Code](https://claude.com/claude-code) by Anthropic.
+
+---
+
+If this helped you, [star the repo](https://github.com/WeberG619/agent-forge). It helps others find it.
 
 ---
 
