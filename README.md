@@ -1,41 +1,47 @@
-# Agent Forge
+<p align="center">
+  <img src="assets/cadre-ai-logo.png" alt="Cadre AI" width="400">
+</p>
 
-**Production-grade agent framework for Claude Code.**
-17 sub-agents. Persistent memory. Desktop automation. Common sense engine.
+<p align="center">
+  <strong>Your AI agent squad for Claude Code.</strong><br>
+  17 specialized agents. Persistent memory. Desktop automation. Common sense engine.
+</p>
 
-[![GitHub stars](https://img.shields.io/github/stars/WeberG619/agent-forge?style=flat-square)](https://github.com/WeberG619/agent-forge/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/WeberG619/agent-forge?style=flat-square)](https://github.com/WeberG619/agent-forge/network/members)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776AB.svg?style=flat-square)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](#requirements)
-
-Built by a BIM automation specialist who needed AI agents that actually work in real professional workflows.
+<p align="center">
+  <a href="https://github.com/WeberG619/cadre-ai/stargazers"><img src="https://img.shields.io/github/stars/WeberG619/cadre-ai?style=flat-square" alt="Stars"></a>
+  <a href="https://github.com/WeberG619/cadre-ai/network/members"><img src="https://img.shields.io/github/forks/WeberG619/cadre-ai?style=flat-square" alt="Forks"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License: MIT"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.8+-3776AB.svg?style=flat-square" alt="Python 3.8+"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square" alt="Platform"></a>
+</p>
 
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/WeberG619/agent-forge.git
-cd agent-forge
+git clone https://github.com/WeberG619/cadre-ai.git
+cd cadre-ai
 ./install.sh
 ```
 
-Restart Claude Code. You now have memory, 17 sub-agents, 22 slash commands, safety hooks, and a common sense engine.
+Restart Claude Code. That's it. You now have memory, 17 sub-agents, 22 slash commands, safety hooks, and a common sense engine.
 
 ---
 
-## What It Looks Like
+## What It Does
+
+You give Claude Code a complex task. Cadre breaks it down, dispatches specialized agents, remembers context from past sessions, checks its own work against a common sense engine, and reports back.
 
 ```
 you: Open the project spreadsheet, pull the cost data, and build a summary deck
 
 Claude Code ─── delegating to orchestrator agent
   ├─ memory_smart_recall("project spreadsheet, cost data")
-  │   └─ Found: project_costs.xlsx on D:\Projects\TAJ
+  │   └─ Found: project_costs.xlsx on D:\Projects
   │
   ├─ launching sub-agent: excel-automation
-  │   ├─ open_workbook("D:\Projects\TAJ\project_costs.xlsx")
+  │   ├─ open_workbook("project_costs.xlsx")
   │   ├─ read_range("Sheet1", "A1:F48")
   │   └─ ✓ Extracted 48 line items, $2.4M total
   │
@@ -43,10 +49,10 @@ Claude Code ─── delegating to orchestrator agent
   │   ├─ create_presentation()
   │   ├─ add_slide("Cost Summary", table_data)
   │   ├─ add_slide("Budget vs Actual", chart_data)
-  │   └─ save_as("TAJ_Cost_Summary.pptx")
+  │   └─ save_as("Cost_Summary.pptx")
   │
-  ├─ memory_store("TAJ cost summary created", project="TAJ")
-  └─ voice: "Done. 3-slide deck saved. Total budget is 2.4 million, 12% under estimate."
+  ├─ memory_store("cost summary created")
+  └─ voice: "Done. 3-slide deck saved."
 
 ✓ Task complete in 34 seconds
 ```
@@ -55,28 +61,28 @@ Claude Code ─── delegating to orchestrator agent
 
 ## Features
 
-### Core Intelligence
-- **Strong Agent Framework** -- 5-phase execution: Orient, Investigate, Execute, Verify, Report
-- **Common Sense Engine** -- pre-action safety checks against past mistakes, blocks destructive operations
-- **Persistent Memory** -- corrections, decisions, facts, and preferences survive across sessions
-- **17 Sub-Agents** -- code analysis, architecture, ML, DevOps, full-stack, C#, Python, and more
+**Core Intelligence**
+- **Strong Agent Framework** — 5-phase execution: Orient, Investigate, Execute, Verify, Report
+- **Common Sense Engine** — pre-action safety checks against past mistakes, blocks destructive operations
+- **Persistent Memory** — corrections, decisions, and preferences survive across sessions
+- **17 Sub-Agents** — code analysis, architecture, ML, DevOps, full-stack, C#, Python, and more
 
-### Desktop Automation
-- **Excel** -- read, write, charts, formulas, pivot tables via COM automation
-- **Word / PowerPoint** -- document and presentation generation
-- **Browser** -- Edge CDP control: navigate, screenshot, type, scroll, click
-- **System Bridge** -- real-time awareness of open apps, monitors, clipboard, recent files
+**Desktop Automation**
+- **Excel** — read, write, charts, formulas, pivot tables via COM automation
+- **Word / PowerPoint** — document and presentation generation
+- **Browser** — Edge CDP control: navigate, screenshot, type, scroll, click
+- **System Bridge** — real-time awareness of open apps, monitors, clipboard, recent files
 
-### Developer Workflow
-- **22 Slash Commands** -- `/commit`, `/delegate`, `/review-and-fix`, `/prime`, `/fix-and-commit`, etc.
-- **Safety Hooks** -- pre-commit guards, MCP seatbelts, secret detection
-- **8 Claude.ai Skills** -- idea validation, product design, marketing, competitive analysis
+**Developer Workflow**
+- **22 Slash Commands** — `/commit`, `/delegate`, `/review-and-fix`, `/prime`, `/fix-and-commit`, and more
+- **Safety Hooks** — pre-commit guards, MCP seatbelts, secret detection
+- **8 Claude.ai Skills** — idea validation, product design, marketing, competitive analysis
 
-### Integrations
-- **Voice/TTS** -- Claude speaks summaries and announcements via Edge TTS
-- **SQLite** -- structured data storage via MCP
-- **Financial** -- stock analysis, portfolio tracking, market data
-- **AI Render** -- Flux Pro photorealistic rendering from text prompts
+**Integrations**
+- **Voice/TTS** — Claude speaks summaries and announcements via Edge TTS
+- **SQLite** — structured data storage via MCP
+- **Financial** — stock analysis, portfolio tracking, market data
+- **AI Render** — Flux Pro photorealistic rendering from text prompts
 
 ---
 
@@ -90,7 +96,7 @@ Claude Code ─── delegating to orchestrator agent
 │  Claude Code                                         │
 │                                                      │
 │  ┌──────────────────────────────────────────┐        │
-│  │  Agent Forge                              │       │
+│  │  Cadre                                    │       │
 │  │                                           │       │
 │  │  ┌─────────────┐  ┌──────────────────┐   │       │
 │  │  │ Strong Agent │  │  Common Sense    │   │       │
@@ -117,22 +123,6 @@ Claude Code ─── delegating to orchestrator agent
 
 ---
 
-## How It Compares
-
-Scored on real-world capability depth across 12 categories ([full interactive comparison](docs/comparison-openclaw.html)):
-
-| Category | Agent Forge | OpenClaw |
-|---|:---:|:---:|
-| Desktop Automation | **10**/10 | 6/10 |
-| Memory System | **10**/10 | 5/10 |
-| Sub-Agent System | **10**/10 | 4/10 |
-| Safety / Common Sense | **10**/10 | 3/10 |
-| Developer Workflow | **10**/10 | 5/10 |
-| BIM / CAD / Engineering | **10**/10 | 0/10 |
-| **Total (12 categories)** | **99/120** | **58/120** |
-
----
-
 ## Configuration Tiers
 
 | Tier | What's Included |
@@ -142,6 +132,8 @@ Scored on real-world capability depth across 12 categories ([full interactive co
 | **Power User** | Everything. Desktop automation, system bridge, all MCP servers. |
 
 See [`examples/`](examples/) for ready-to-use configurations for each tier.
+
+---
 
 ## Requirements
 
@@ -172,7 +164,7 @@ Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-GPL-3.0 -- see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details.
 
 ## Credits
 
@@ -182,8 +174,8 @@ Powered by [Claude Code](https://claude.com/claude-code) by Anthropic.
 
 ---
 
-If this helped you, [star the repo](https://github.com/WeberG619/agent-forge). It helps others find it.
+If this helped you, [star the repo](https://github.com/WeberG619/cadre-ai) — it helps others find it.
 
 ---
 
-*Agent Forge is an independent community project. It is not affiliated with, endorsed by, or officially connected to Anthropic, PBC. "Claude" and "Claude Code" are trademarks of Anthropic.*
+*Cadre is an independent community project. Not affiliated with or endorsed by Anthropic, PBC. "Claude" and "Claude Code" are trademarks of Anthropic.*

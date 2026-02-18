@@ -22,7 +22,7 @@ def main():
         sys.exit(0)
 
     # Save basic session info
-    install_dir = os.environ.get("AGENT_FORGE_DIR", str(Path.home() / ".agent-forge"))
+    install_dir = os.environ.get("CADRE_DIR", str(Path.home() / ".cadre-ai"))
     session_file = Path(install_dir) / "session_state.json"
 
     try:

@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common issues and solutions for Agent Forge.
+Common issues and solutions for Cadre.
 
 ## Installation Issues
 
@@ -38,10 +38,10 @@ chmod +x install.sh
 
 ```bash
 # Check if dependencies are installed
-pip install -r ~/.agent-forge/mcp-servers/claude-memory/requirements.txt
+pip install -r ~/.cadre-ai/mcp-servers/claude-memory/requirements.txt
 
 # Test the server manually
-python3 ~/.agent-forge/mcp-servers/claude-memory/src/server.py
+python3 ~/.cadre-ai/mcp-servers/claude-memory/src/server.py
 ```
 
 ### Voice not working
@@ -111,19 +111,19 @@ Disable a specific hook by removing it from settings.json, or disable all hooks 
 
 ```bash
 # Check if already running
-python3 ~/.agent-forge/system-bridge/daemon.py --status
+python3 ~/.cadre-ai/system-bridge/daemon.py --status
 
 # Start in foreground for debugging
-python3 ~/.agent-forge/system-bridge/daemon.py --console
+python3 ~/.cadre-ai/system-bridge/daemon.py --console
 
 # Check logs
-cat ~/.agent-forge/system-bridge/daemon.log
+cat ~/.cadre-ai/system-bridge/daemon.log
 ```
 
 ### live_state.json not updating
 
-1. Check daemon is running: `cat ~/.agent-forge/system-bridge/daemon.pid`
-2. Check health: `cat ~/.agent-forge/system-bridge/health.json`
+1. Check daemon is running: `cat ~/.cadre-ai/system-bridge/daemon.pid`
+2. Check health: `cat ~/.cadre-ai/system-bridge/health.json`
 3. On WSL, ensure PowerShell is accessible
 
 ## General Issues
@@ -143,7 +143,7 @@ ls ~/.claude/commands/
 
 ### Context window filling up fast
 
-Agent Forge adds context overhead. To reduce:
+Cadre adds context overhead. To reduce:
 1. Remove MCP servers you don't use from settings.local.json
 2. Simplify CLAUDE.md — remove sections you don't need
 3. Use `/compact` when context gets large
@@ -151,8 +151,8 @@ Agent Forge adds context overhead. To reduce:
 ## Uninstalling
 
 ```bash
-cd /path/to/agent-forge
+cd /path/to/cadre-ai
 ./uninstall.sh
 ```
 
-This removes all Agent Forge files and optionally restores your backup configuration.
+This removes all Cadre files and optionally restores your backup configuration.

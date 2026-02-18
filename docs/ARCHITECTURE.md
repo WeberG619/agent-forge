@@ -1,6 +1,6 @@
 # Architecture
 
-How Agent Forge works under the hood.
+How Cadre works under the hood.
 
 ## System Overview
 

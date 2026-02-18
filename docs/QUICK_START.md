@@ -1,12 +1,12 @@
 # Quick Start Guide
 
-Get Agent Forge running in 5 minutes.
+Get Cadre running in 5 minutes.
 
 ## 1. Clone and Install
 
 ```bash
-git clone https://github.com/WeberG619/agent-forge.git
-cd agent-forge
+git clone https://github.com/WeberG619/cadre-ai.git
+cd cadre-ai
 ./install.sh
 ```
 

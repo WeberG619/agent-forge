@@ -4,12 +4,12 @@
 
 ### Step 0: Read live system state
 ```bash
-cat ~/.agent-forge/system-bridge/live_state.json 2>/dev/null
+cat ~/.cadre-ai/system-bridge/live_state.json 2>/dev/null
 ```
 
 ### Step 1: Load common sense kernel
 ```bash
-cat ~/.agent-forge/framework/common-sense/kernel.md
+cat ~/.cadre-ai/framework/common-sense/kernel.md
 ```
 
 ### Step 2: Load memory context
@@ -35,7 +35,7 @@ mcp__claude-memory__memory_smart_context(current_directory="<pwd>")
 
 Every time you use the Task tool:
 
-1. Read `~/.agent-forge/framework/strong-agent.md`
+1. Read `~/.cadre-ai/framework/strong-agent.md`
 2. Load memory corrections: `memory_smart_recall` + `memory_check_before_action`
 3. Summarize relevant conversation context
 4. Use `model: "opus"` — never downgrade sub-agents

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent Forge - System Bridge Daemon
+Cadre - System Bridge Daemon
 Monitors system state and writes live_state.json for Claude Code context awareness.
 
 Supports: Windows (full), macOS (partial), Linux (partial)
@@ -24,7 +24,7 @@ import subprocess
 import platform
 
 # Configuration
-BASE_DIR = Path(os.environ.get("AGENT_FORGE_DIR", str(Path.home() / ".agent-forge"))) / "system-bridge"
+BASE_DIR = Path(os.environ.get("CADRE_DIR", str(Path.home() / ".cadre-ai"))) / "system-bridge"
 STATE_FILE = BASE_DIR / "live_state.json"
 PID_FILE = BASE_DIR / "daemon.pid"
 HEALTH_FILE = BASE_DIR / "health.json"

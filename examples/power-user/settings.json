@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.agent-forge/hooks/session-start/start_services.sh",
+            "command": "~/.cadre-ai/hooks/session-start/start_services.sh",
             "timeout": 30,
             "statusMessage": "Starting background services..."
           }
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agent-forge/hooks/pre-tool-use/pre_commit_guard.py",
+            "command": "python3 ~/.cadre-ai/hooks/pre-tool-use/pre_commit_guard.py",
             "timeout": 10,
             "statusMessage": "Pre-commit guard..."
           }
@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agent-forge/hooks/user-prompt/detect_correction.py",
+            "command": "python3 ~/.cadre-ai/hooks/user-prompt/detect_correction.py",
             "timeout": 5,
             "statusMessage": "Checking for correction intent..."
           }
@@ -58,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agent-forge/hooks/stop/session_save.py",
+            "command": "python3 ~/.cadre-ai/hooks/stop/session_save.py",
             "timeout": 10,
             "statusMessage": "Saving session state..."
           }
@@ -69,23 +69,23 @@
   "mcpServers": {
     "claude-memory": {
       "command": "python3",
-      "args": ["~/.agent-forge/mcp-servers/claude-memory/src/server.py"],
+      "args": ["~/.cadre-ai/mcp-servers/claude-memory/src/server.py"],
       "disabled": false
     },
     "voice": {
       "command": "python3",
-      "args": ["~/.agent-forge/mcp-servers/voice-mcp/server.py"],
+      "args": ["~/.cadre-ai/mcp-servers/voice-mcp/server.py"],
       "disabled": false
     },
     "windows-browser": {
       "command": "python3",
-      "args": ["~/.agent-forge/mcp-servers/windows-browser/src/server.py"],
+      "args": ["~/.cadre-ai/mcp-servers/windows-browser/src/server.py"],
       "disabled": false,
       "_comment": "Windows/WSL only - browser automation via CDP"
     },
     "telegram-mcp": {
       "command": "python3",
-      "args": ["~/.agent-forge/mcp-servers/telegram-mcp/server.py"],
+      "args": ["~/.cadre-ai/mcp-servers/telegram-mcp/server.py"],
       "env": {
         "TELEGRAM_BOT_TOKEN": "YOUR_BOT_TOKEN_HERE"
       },

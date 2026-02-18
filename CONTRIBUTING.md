@@ -1,11 +1,11 @@
-# Contributing to Agent Forge
+# Contributing to Cadre
 
 Thanks for your interest in contributing! Here's how to get started.
 
 ## Getting Started
 
 1. Fork the repo
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/agent-forge.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/cadre-ai.git`
 3. Create a branch: `git checkout -b my-feature`
 4. Make your changes
 5. Test on your machine with `./install.sh`

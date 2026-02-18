@@ -1,6 +1,6 @@
 # Creating Custom Agents
 
-How to create your own specialized sub-agents for Agent Forge.
+How to create your own specialized sub-agents for Cadre.
 
 ## What is an Agent?
 
@@ -12,9 +12,9 @@ An agent is a markdown file that contains a system prompt for a specialized sub-
 ~/.claude/agents/my-agent.md
 ```
 
-Or in Agent Forge:
+Or in Cadre:
 ```
-~/.agent-forge/agents/my-agent.md
+~/.cadre-ai/agents/my-agent.md
 ```
 
 ## Agent Template

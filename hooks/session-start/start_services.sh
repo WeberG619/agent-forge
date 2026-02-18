@@ -1,8 +1,8 @@
 #!/bin/bash
-# Session Start Hook - Start background services for Agent Forge
+# Session Start Hook - Start background services for Cadre
 # This runs when a new Claude Code session starts.
 
-INSTALL_DIR="${AGENT_FORGE_DIR:-$HOME/.agent-forge}"
+INSTALL_DIR="${CADRE_DIR:-$HOME/.cadre-ai}"
 
 # Start system bridge daemon (if not already running)
 if [ -f "$INSTALL_DIR/system-bridge/daemon.py" ]; then
