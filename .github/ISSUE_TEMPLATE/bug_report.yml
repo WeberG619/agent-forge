@@ -1,0 +1,62 @@
+name: Bug Report
+description: Something isn't working
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the issue clearly.
+      placeholder: "install.sh failed at the MCP server step"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: "Install should complete without errors"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Clone the repo
+        2. Run ./install.sh
+        3. Select Developer tier
+        4. Error appears at step X
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows (WSL)
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.11"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output / logs
+      description: Paste any relevant error messages.
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,94 @@
+name: Feedback
+description: Tell us what you think — good, bad, or ugly
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Cadre. Honest feedback helps — don't hold back.
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Which tier did you install?
+      options:
+        - Minimal
+        - Developer
+        - Power User
+        - "Didn't install — just browsing the repo"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows (WSL)
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Did the install work on the first try?
+      options:
+        - "Yes — no issues"
+        - "Yes — but the instructions were confusing"
+        - "No — had to troubleshoot"
+        - "No — gave up"
+        - "Didn't try to install"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What did you try to do with Cadre?
+      description: What task or workflow brought you here?
+      placeholder: "e.g., I wanted persistent memory for Claude Code sessions"
+    validations:
+      required: true
+
+  - type: textarea
+    id: confused
+    attributes:
+      label: What confused you?
+      description: Anything in the docs, install, or usage that wasn't clear?
+      placeholder: "e.g., I didn't understand how the tier system works"
+    validations:
+      required: false
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: What's missing?
+      description: Features, docs, or integrations you expected but didn't find?
+      placeholder: "e.g., I wanted Linux desktop automation support"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: daily
+    attributes:
+      label: Would you use this daily?
+      options:
+        - "Yes — already am"
+        - "Probably — with some improvements"
+        - "Maybe — need to try it more"
+        - "No — here's why (explain below)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
+      description: Praise, complaints, suggestions — all welcome.
+      placeholder: "Be honest."
+    validations:
+      required: false
