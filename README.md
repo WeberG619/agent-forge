@@ -27,6 +27,8 @@ cd cadre-ai
 
 Restart Claude Code. That's it. You now have memory, 17 sub-agents, 22 slash commands, safety hooks, and a common sense engine.
 
+**[Full Getting Started Guide](docs/QUICK_START.md)** — 5-minute walkthrough with examples for each feature.
+
 ---
 
 ## What It Does
@@ -144,7 +146,7 @@ See [`examples/`](examples/) for ready-to-use configurations for each tier.
 
 ## Documentation
 
-- [Quick Start Guide](docs/QUICK_START.md)
+- [Getting Started Guide](docs/QUICK_START.md)
 - [Architecture Deep Dive](docs/ARCHITECTURE.md)
 - [Creating Custom Agents](docs/CREATING_AGENTS.md)
 - [Creating Skills](docs/CREATING_SKILLS.md)
