@@ -17,6 +17,79 @@
 
 ---
 
+## Quick Demo
+
+> Full video demo coming soon — see [`demo/`](demo/) for recording instructions.
+
+Three scenarios that show what Cadre does in practice:
+
+```
+────────────────────────────────────────────────────────────────────────────
+  SCENARIO 1 — Memory recall across sessions
+────────────────────────────────────────────────────────────────────────────
+
+── Session A: prime a new project ──────────────────────────────────────────
+
+$ claude
+  System Aware — Memory: 18 stored facts | Last task: [none for this project]
+
+> /prime
+
+  Priming project: my-fastapi-app
+  Reading README.md, pyproject.toml, scanning src/ (47 files)...
+  ────────────────────────────────────────────────────────
+  Stack        FastAPI 0.111 · Python 3.11 · SQLAlchemy 2
+  Entry point  src/main.py  (uvicorn, port 8000)
+  Auth         JWT / OAuth2 password flow
+  Tests        pytest · 82% coverage · make test
+  ────────────────────────────────────────────────────────
+  ✓  Project context stored to memory.
+
+── Session B: brand-new terminal, zero context loaded ───────────────────────
+
+$ claude
+  System Aware — Memory: 19 stored facts | Last task: primed my-fastapi-app
+
+> What do we know about my-fastapi-app?
+
+  Stack        FastAPI 0.111 / Python 3.11 / SQLAlchemy 2
+  Entry point  src/main.py (uvicorn, port 8000)
+  Auth         JWT / OAuth2  |  Tests: make test (82% coverage)
+  Last primed  2 hours ago
+  Ready. What would you like to do?
+
+────────────────────────────────────────────────────────────────────────────
+  SCENARIO 2 — Common sense engine blocks a dangerous action
+────────────────────────────────────────────────────────────────────────────
+
+> Delete all .log files in /var/log recursively
+
+  [common sense engine] BLOCKED
+  ────────────────────────────────────────────────────────
+  Rule:    Never delete files in system directories without explicit
+           confirmation and a stated recovery plan.
+  Risk:    HIGH — system log loss breaks audit trails.
+  ────────────────────────────────────────────────────────
+  I will not run: rm -rf /var/log/**/*.log
+
+  Did you mean logs inside a project directory?
+
+────────────────────────────────────────────────────────────────────────────
+  SCENARIO 3 — Automatic correction capture
+────────────────────────────────────────────────────────────────────────────
+
+> Don't delete system logs — only .log files inside ~/projects/
+
+  Executing: find ~/projects/ -name "*.log" -type f -delete
+  ✓  Deleted 14 log files across 3 project directories.
+
+  [memory] Correction captured:
+  "When asked to delete logs, scope to ~/projects/ not system directories."
+  This preference will apply in all future sessions.
+```
+
+---
+
 ## Quick Start
 
 ```bash

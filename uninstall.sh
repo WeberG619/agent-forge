@@ -32,10 +32,20 @@ echo ""
 echo -e "${YELLOW}Your MCP server data (memory database, etc.) will NOT be deleted.${NC}"
 echo ""
 
-read -p "Are you sure? [y/N]: " confirm
-if [[ ! "$confirm" =~ ^[Yy] ]]; then
-    echo "Cancelled."
-    exit 0
+# Allow non-interactive uninstall via --ci / --yes flag
+CI_UNINSTALL=false
+for arg in "$@"; do
+    case "$arg" in
+        --ci|--yes|-y) CI_UNINSTALL=true ;;
+    esac
+done
+
+if [ "$CI_UNINSTALL" = false ]; then
+    read -p "Are you sure? [y/N]: " confirm
+    if [[ ! "$confirm" =~ ^[Yy] ]]; then
+        echo "Cancelled."
+        exit 0
+    fi
 fi
 
 # Stop system bridge daemon
@@ -84,10 +94,15 @@ fi
 # Restore backup if available
 LATEST_BACKUP=$(ls -td "$CLAUDE_DIR"/backup-* 2>/dev/null | head -1)
 if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP" ]; then
-    read -p "Restore backup from $LATEST_BACKUP? [Y/n]: " restore
-    if [[ ! "$restore" =~ ^[Nn] ]]; then
-        cp "$LATEST_BACKUP"/* "$CLAUDE_DIR/" 2>/dev/null || true
-        echo -e "${GREEN}[✓]${NC} Restored backup"
+    if [ "$CI_UNINSTALL" = true ]; then
+        # Skip backup restore in CI — nothing to restore to
+        true
+    else
+        read -p "Restore backup from $LATEST_BACKUP? [Y/n]: " restore
+        if [[ ! "$restore" =~ ^[Nn] ]]; then
+            cp "$LATEST_BACKUP"/* "$CLAUDE_DIR/" 2>/dev/null || true
+            echo -e "${GREEN}[✓]${NC} Restored backup"
+        fi
     fi
 fi
 

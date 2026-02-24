@@ -1,0 +1,42 @@
+[
+  {
+    "name": "docker-specialist",
+    "description": "Deep expertise in Docker, Compose, multi-stage builds, and container security. Writes Dockerfiles, debugs container networking, and optimizes image layers.",
+    "author": "cadre-community",
+    "url": "https://raw.githubusercontent.com/cadre-community/agents/main/docker-specialist.md",
+    "version": "1.0.0",
+    "tags": ["docker", "containers", "devops", "infrastructure", "compose"]
+  },
+  {
+    "name": "terraform-agent",
+    "description": "Infrastructure-as-code agent for Terraform and OpenTofu. Writes HCL modules, plans and validates changes, and advises on cloud resource design across AWS, GCP, and Azure.",
+    "author": "cadre-community",
+    "url": "https://raw.githubusercontent.com/cadre-community/agents/main/terraform-agent.md",
+    "version": "1.0.0",
+    "tags": ["terraform", "iac", "infrastructure", "aws", "gcp", "azure", "devops"]
+  },
+  {
+    "name": "rust-engineer",
+    "description": "Expert Rust development agent. Handles ownership patterns, async runtimes (Tokio), unsafe code review, FFI, and performance profiling. Writes idiomatic, zero-cost Rust.",
+    "author": "cadre-community",
+    "url": "https://raw.githubusercontent.com/cadre-community/agents/main/rust-engineer.md",
+    "version": "1.0.0",
+    "tags": ["rust", "systems", "performance", "async", "wasm"]
+  },
+  {
+    "name": "react-native-dev",
+    "description": "React Native specialist for cross-platform iOS and Android development. Handles native modules, Expo, navigation, state management, and app store deployment.",
+    "author": "cadre-community",
+    "url": "https://raw.githubusercontent.com/cadre-community/agents/main/react-native-dev.md",
+    "version": "1.0.0",
+    "tags": ["react-native", "ios", "android", "mobile", "expo", "typescript"]
+  },
+  {
+    "name": "database-admin",
+    "description": "Database administration agent covering PostgreSQL, MySQL, SQLite, and MongoDB. Writes and tunes queries, manages migrations, designs schemas, and monitors performance.",
+    "author": "cadre-community",
+    "url": "https://raw.githubusercontent.com/cadre-community/agents/main/database-admin.md",
+    "version": "1.0.0",
+    "tags": ["database", "postgresql", "mysql", "sqlite", "mongodb", "sql", "migrations"]
+  }
+]

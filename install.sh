@@ -168,6 +168,19 @@ select_components() {
 
         read -p "  Install System Bridge (live state monitoring)? [y/N]: " ans
         [[ "$ans" =~ ^[Yy] ]] && INSTALL_BRIDGE=true
+
+    elif [ "$OS_TYPE" = "macos" ]; then
+        print_info "macOS detected — Windows-only components (PowerShell bridge, Edge CDP) will be skipped."
+        echo ""
+
+        read -p "  Install macOS Browser Automation (Chrome CDP)? [y/N]: " ans
+        [[ "$ans" =~ ^[Yy] ]] && INSTALL_BROWSER=true
+
+        read -p "  Install macOS Desktop Automation (AppleScript stubs for Excel/Word/PowerPoint)? [y/N]: " ans
+        [[ "$ans" =~ ^[Yy] ]] && INSTALL_DESKTOP=true
+
+        read -p "  Install System Bridge (live state monitoring)? [y/N]: " ans
+        [[ "$ans" =~ ^[Yy] ]] && INSTALL_BRIDGE=true
     fi
 
     read -p "  Install Safety Hooks (pre-commit guard, correction detection)? [Y/n]: " ans
@@ -247,7 +260,11 @@ do_install() {
         mkdir -p "$INSTALL_DIR/system-bridge"
         cp "$SCRIPT_DIR"/system-bridge/*.py "$INSTALL_DIR/system-bridge/" 2>/dev/null || true
         cp "$SCRIPT_DIR"/system-bridge/*.md "$INSTALL_DIR/system-bridge/" 2>/dev/null || true
-        print_step "Installed system bridge"
+        if [ "$OS_TYPE" = "macos" ]; then
+            print_step "Installed system bridge (macOS — macos_bridge.py + daemon.py)"
+        else
+            print_step "Installed system bridge"
+        fi
     fi
 
     # ── MCP Servers ──
@@ -271,20 +288,37 @@ do_install() {
         mcp_count=$((mcp_count + 1))
     fi
 
-    if [ "$INSTALL_BROWSER" = true ] && [ -d "$SCRIPT_DIR/mcp-servers/windows-browser" ]; then
-        mkdir -p "$INSTALL_DIR/mcp-servers/windows-browser"
-        cp -r "$SCRIPT_DIR/mcp-servers/windows-browser/"* "$INSTALL_DIR/mcp-servers/windows-browser/" 2>/dev/null || true
-        mcp_count=$((mcp_count + 1))
+    if [ "$INSTALL_BROWSER" = true ]; then
+        if [ "$OS_TYPE" = "wsl" ] && [ -d "$SCRIPT_DIR/mcp-servers/windows-browser" ]; then
+            mkdir -p "$INSTALL_DIR/mcp-servers/windows-browser"
+            cp -r "$SCRIPT_DIR/mcp-servers/windows-browser/"* "$INSTALL_DIR/mcp-servers/windows-browser/" 2>/dev/null || true
+            mcp_count=$((mcp_count + 1))
+        elif [ "$OS_TYPE" = "macos" ]; then
+            # macOS: copy the macos_automation module; no separate MCP server needed —
+            # Chrome CDP is accessed directly via macos_automation.py helpers.
+            mkdir -p "$INSTALL_DIR/system-bridge"
+            cp "$SCRIPT_DIR/system-bridge/macos_automation.py" "$INSTALL_DIR/system-bridge/" 2>/dev/null || true
+            print_info "macOS browser: use Chrome CDP via macos_automation.py (no separate MCP server)"
+            mcp_count=$((mcp_count + 1))
+        fi
     fi
 
     if [ "$INSTALL_DESKTOP" = true ]; then
-        for server in excel-mcp word-mcp powerpoint-mcp; do
-            if [ -d "$SCRIPT_DIR/mcp-servers/$server" ]; then
-                mkdir -p "$INSTALL_DIR/mcp-servers/$server"
-                cp -r "$SCRIPT_DIR/mcp-servers/$server/"* "$INSTALL_DIR/mcp-servers/$server/" 2>/dev/null || true
-                mcp_count=$((mcp_count + 1))
-            fi
-        done
+        if [ "$OS_TYPE" = "wsl" ]; then
+            for server in excel-mcp word-mcp powerpoint-mcp; do
+                if [ -d "$SCRIPT_DIR/mcp-servers/$server" ]; then
+                    mkdir -p "$INSTALL_DIR/mcp-servers/$server"
+                    cp -r "$SCRIPT_DIR/mcp-servers/$server/"* "$INSTALL_DIR/mcp-servers/$server/" 2>/dev/null || true
+                    mcp_count=$((mcp_count + 1))
+                fi
+            done
+        elif [ "$OS_TYPE" = "macos" ]; then
+            # macOS: AppleScript stubs in macos_automation.py (already copied with system bridge)
+            mkdir -p "$INSTALL_DIR/system-bridge"
+            cp "$SCRIPT_DIR/system-bridge/macos_automation.py" "$INSTALL_DIR/system-bridge/" 2>/dev/null || true
+            print_info "macOS desktop: Office automation via AppleScript stubs in macos_automation.py"
+            print_info "See docs/MACOS.md for usage and known limitations vs Windows COM"
+        fi
     fi
 
     [ $mcp_count -gt 0 ] && print_step "Installed $mcp_count MCP server(s)"
@@ -342,28 +376,46 @@ generate_settings() {
 
     if [ "$INSTALL_BROWSER" = true ]; then
         [ -n "$mcp_block" ] && mcp_block="$mcp_block,"
-        local win_path
-        win_path=$(echo "$INSTALL_DIR" | sed 's|/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
-        mcp_block="$mcp_block
+        if [ "$OS_TYPE" = "wsl" ]; then
+            local win_path
+            win_path=$(echo "$INSTALL_DIR" | sed 's|/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
+            mcp_block="$mcp_block
     \"windows-browser\": {
       \"command\": \"powershell.exe\",
       \"args\": [\"-NoProfile\", \"-ExecutionPolicy\", \"Bypass\", \"-Command\", \"cd '${win_path}\\\\mcp-servers\\\\windows-browser'; python server.py\"],
       \"disabled\": false
     }"
+        elif [ "$OS_TYPE" = "macos" ]; then
+            # macOS: no dedicated MCP server — macos_automation.py is imported directly.
+            # We emit a comment-style disabled entry so users know it's available.
+            mcp_block="$mcp_block
+    \"macos-browser\": {
+      \"command\": \"python3\",
+      \"args\": [\"-c\", \"import sys; sys.path.insert(0,'$INSTALL_DIR/system-bridge'); from macos_automation import launch_chrome_cdp; launch_chrome_cdp()\"],
+      \"disabled\": true,
+      \"_note\": \"macOS: use macos_automation.py helpers directly or enable this stub\"
+    }"
+        fi
     fi
 
     if [ "$INSTALL_DESKTOP" = true ]; then
-        local win_path
-        win_path=$(echo "$INSTALL_DIR" | sed 's|/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
-        for server in excel-mcp word-mcp powerpoint-mcp; do
-            [ -n "$mcp_block" ] && mcp_block="$mcp_block,"
-            mcp_block="$mcp_block
+        if [ "$OS_TYPE" = "wsl" ]; then
+            local win_path
+            win_path=$(echo "$INSTALL_DIR" | sed 's|/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
+            for server in excel-mcp word-mcp powerpoint-mcp; do
+                [ -n "$mcp_block" ] && mcp_block="$mcp_block,"
+                mcp_block="$mcp_block
     \"$server\": {
       \"command\": \"powershell.exe\",
       \"args\": [\"-NoProfile\", \"-ExecutionPolicy\", \"Bypass\", \"-Command\", \"cd '${win_path}\\\\mcp-servers\\\\${server}'; python server.py\"],
       \"disabled\": false
     }"
-        done
+            done
+        elif [ "$OS_TYPE" = "macos" ]; then
+            # macOS: AppleScript stubs — no COM, no MCP server entry needed.
+            # Functions are called directly via macos_automation.py.
+            print_info "macOS desktop: No MCP server entry generated (use macos_automation.py directly)"
+        fi
     fi
 
     # Only write if we have MCP servers
@@ -444,9 +496,27 @@ post_install() {
     echo -e "    ${GREEN}✓${NC} 8 Claude.ai skills"
     [ "$INSTALL_MEMORY" = true ] && echo -e "    ${GREEN}✓${NC} Memory system (claude-memory MCP)"
     [ "$INSTALL_VOICE" = true ] && echo -e "    ${GREEN}✓${NC} Voice/TTS (Edge TTS)"
-    [ "$INSTALL_BROWSER" = true ] && echo -e "    ${GREEN}✓${NC} Browser automation (Edge CDP)"
-    [ "$INSTALL_DESKTOP" = true ] && echo -e "    ${GREEN}✓${NC} Desktop automation (Excel, Word, PowerPoint)"
-    [ "$INSTALL_BRIDGE" = true ] && echo -e "    ${GREEN}✓${NC} System bridge daemon"
+    if [ "$INSTALL_BROWSER" = true ]; then
+        if [ "$OS_TYPE" = "macos" ]; then
+            echo -e "    ${GREEN}✓${NC} Browser automation (Chrome CDP via macos_automation.py)"
+        else
+            echo -e "    ${GREEN}✓${NC} Browser automation (Edge CDP)"
+        fi
+    fi
+    if [ "$INSTALL_DESKTOP" = true ]; then
+        if [ "$OS_TYPE" = "macos" ]; then
+            echo -e "    ${GREEN}✓${NC} Desktop automation (AppleScript stubs — see docs/MACOS.md)"
+        else
+            echo -e "    ${GREEN}✓${NC} Desktop automation (Excel, Word, PowerPoint)"
+        fi
+    fi
+    if [ "$INSTALL_BRIDGE" = true ]; then
+        if [ "$OS_TYPE" = "macos" ]; then
+            echo -e "    ${GREEN}✓${NC} System bridge daemon (macOS native)"
+        else
+            echo -e "    ${GREEN}✓${NC} System bridge daemon"
+        fi
+    fi
     [ "$INSTALL_HOOKS" = true ] && echo -e "    ${GREEN}✓${NC} Safety hooks (pre-commit guard, correction detection)"
     echo ""
 
@@ -460,9 +530,39 @@ post_install() {
     echo -e "    2. Try: ${CYAN}/prime${NC} to explore your codebase"
     echo -e "    3. Try: ${CYAN}/commit${NC} for smart git commits"
     echo -e "    4. Try: ${CYAN}/memory${NC} to store and recall knowledge"
+    if [ "$OS_TYPE" = "macos" ]; then
+        echo ""
+        echo -e "  ${BOLD}macOS-specific:${NC}"
+        echo -e "    • Read ${CYAN}$SCRIPT_DIR/docs/MACOS.md${NC} for feature details and limitations"
+        echo -e "    • Grant Accessibility permission to your terminal for window automation"
+        echo -e "    • For Office scripting: open Excel/Word first, then call macos_automation.py helpers"
+    fi
     echo ""
     echo -e "  ${BOLD}Documentation:${NC} $SCRIPT_DIR/docs/"
     echo -e "  ${BOLD}Examples:${NC}      $INSTALL_DIR/examples/"
+    echo ""
+}
+
+# ============================================================
+# CI / NON-INTERACTIVE MODE
+# ============================================================
+
+ci_setup() {
+    # Supply defaults for all interactive prompts so the installer
+    # can run unattended in CI pipelines (GitHub Actions, etc.).
+    USER_NAME="${CI_USER_NAME:-ci-runner}"
+    TIMEZONE="${CI_TIMEZONE:-UTC}"
+    INSTALL_DIR="${CI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+
+    INSTALL_MEMORY=false
+    INSTALL_VOICE=false
+    INSTALL_BROWSER=false
+    INSTALL_DESKTOP=false
+    INSTALL_BRIDGE=false
+    INSTALL_HOOKS=true
+
+    print_info "CI mode: USER=$USER_NAME, TZ=$TIMEZONE, DIR=$INSTALL_DIR"
+    print_info "Components: hooks=true, all optional components=false"
     echo ""
 }
 
@@ -471,10 +571,26 @@ post_install() {
 # ============================================================
 
 main() {
+    # Parse flags
+    CI_MODE=false
+    for arg in "$@"; do
+        case "$arg" in
+            --ci|--minimal)
+                CI_MODE=true
+                ;;
+        esac
+    done
+
     print_header
     preflight_checks
-    user_setup
-    select_components
+
+    if [ "$CI_MODE" = true ]; then
+        ci_setup
+    else
+        user_setup
+        select_components
+    fi
+
     do_install
     post_install
 }
