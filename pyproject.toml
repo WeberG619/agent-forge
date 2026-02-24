@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "cadre-ai"
+version = "1.0.0"
+description = "Agent framework for Claude Code with persistent memory and common sense engine"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Weber Gouin", email = "weberg619@gmail.com" },
+]
+keywords = ["claude", "ai", "agents", "mcp", "automation", "framework"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+memory = [
+    "fastembed>=0.2.0",
+    "sqlite-utils>=3.35",
+]
+voice = [
+    "edge-tts>=6.1.0",
+]
+all = [
+    "fastembed>=0.2.0",
+    "sqlite-utils>=3.35",
+    "edge-tts>=6.1.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+cadre = "cadre_ai.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/webergouin/cadre-ai"
+Repository = "https://github.com/webergouin/cadre-ai"
+Issues = "https://github.com/webergouin/cadre-ai/issues"
+Documentation = "https://github.com/webergouin/cadre-ai/tree/main/docs"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cadre_ai*"]
+
+[tool.setuptools.package-data]
+"cadre_ai" = [
+    "data/agents/*.md",
+    "data/agents/*.yaml",
+    "data/commands/*.md",
+    "data/framework/*.md",
+    "data/framework/common-sense/*",
+    "data/hooks/pre-tool-use/*.py",
+    "data/hooks/post-tool-use/*.sh",
+    "data/hooks/user-prompt/*.py",
+    "data/hooks/session-start/*.sh",
+    "data/hooks/stop/*.py",
+    "data/skills/*.skill",
+    "data/templates/*",
+    "data/examples/**/*",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

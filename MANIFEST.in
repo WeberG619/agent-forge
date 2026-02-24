@@ -1,0 +1,55 @@
+# MANIFEST.in — controls which non-Python files are included in the sdist.
+# Wheel packaging is handled by [tool.setuptools.package-data] in pyproject.toml.
+
+# Top-level documentation and scripts
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include install.sh
+include uninstall.sh
+
+# Agents
+recursive-include agents *.md *.yaml
+
+# Slash commands
+recursive-include commands *.md
+
+# Framework (markdown + Python scripts + JSON)
+recursive-include framework *.md *.py *.json
+
+# Hooks (Python + shell)
+recursive-include hooks *.py *.sh
+
+# Skills
+recursive-include skills *.skill
+
+# Templates
+recursive-include templates *
+
+# Examples
+recursive-include examples *
+
+# MCP servers (Python source, requirements, README)
+recursive-include mcp-servers *.py *.txt *.md *.json *.yaml *.toml
+
+# System bridge
+recursive-include system-bridge *.py *.md *.json *.sh
+
+# Proactive / autonomous-agent configs
+recursive-include proactive *
+recursive-include autonomous-agent *
+
+# Docs
+recursive-include docs *
+
+# Assets (icons, images used in docs / README)
+recursive-include assets *
+
+# Exclude compiled Python and caches
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude *.egg-info
+global-exclude .DS_Store
+global-exclude *.swp
+global-exclude .git

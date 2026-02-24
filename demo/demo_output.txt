@@ -1,0 +1,147 @@
+────────────────────────────────────────────────────────────────────────────────
+  Cadre AI — Terminal Demo Transcript
+  Three scenarios: install check · memory recall · safety engine
+────────────────────────────────────────────────────────────────────────────────
+
+
+══════════════════════════════════════════════════════════════════════════════
+  SCENARIO 1 — Install & Health Check
+══════════════════════════════════════════════════════════════════════════════
+
+$ cadre doctor
+
+  Cadre AI — System Check
+  ─────────────────────────────────────────────────────
+  Claude Code                ✓  v1.4.2
+  Python                     ✓  3.11.8
+  CLAUDE.md (global)         ✓  /home/user/.claude/CLAUDE.md
+  Memory MCP server          ✓  mcp__claude-memory reachable
+  Voice MCP server           ✓  mcp__voice reachable
+  SQLite MCP server          ✓  mcp__sqlite-server reachable
+  Agents installed           ✓  17 agents found
+  Slash commands             ✓  22 commands found
+  Hooks (pre-tool-use)       ✓  common sense engine loaded
+  Hooks (session-start)      ✓  memory smart context loaded
+  Strong agent framework     ✓  strong-agent.md present
+  Common sense seeds         ✓  seeds.json (42 rules)
+  ─────────────────────────────────────────────────────
+  Status: All systems operational. No issues found.
+
+$ cadre install --minimal --yes
+
+  Installing Cadre AI (minimal tier)...
+  ✓  Copying CLAUDE.md → ~/.claude/CLAUDE.md
+  ✓  Installing 17 agent definitions → ~/.claude/agents/
+  ✓  Installing 22 slash commands   → ~/.claude/commands/
+  ✓  Installing common sense engine → ~/.claude/framework/
+  ✓  Installing strong agent prompt → ~/.claude/framework/
+  ✓  Installing session-start hook  → ~/.claude/hooks/
+  ✓  Writing requirements to pyproject.toml
+
+  Done. Restart Claude Code to activate Cadre.
+  Tip: run `cadre install --power` for desktop automation + MCP servers.
+
+
+══════════════════════════════════════════════════════════════════════════════
+  SCENARIO 2 — /prime + Memory Recall Across Sessions
+══════════════════════════════════════════════════════════════════════════════
+
+── Session A: priming a new project ─────────────────────────────────────────
+
+$ cd ~/projects/my-fastapi-app
+$ claude
+
+  System Aware — Open Apps: VS Code, Terminal | Memory: 18 stored facts
+  Last task: [none for this project]
+
+> /prime
+
+  Priming project: my-fastapi-app
+  ─────────────────────────────────────────────────────
+  Reading README.md...
+  Reading pyproject.toml...
+  Scanning src/ directory (47 files)...
+  Scanning tests/ (12 test files, pytest)...
+  ─────────────────────────────────────────────────────
+  Tech stack       FastAPI 0.111 · Python 3.11 · SQLAlchemy 2
+  Entry point      src/main.py  (uvicorn, port 8000)
+  Database         PostgreSQL via asyncpg, Alembic migrations
+  Auth             JWT (python-jose), OAuth2 password flow
+  Tests            pytest + httpx async client (82% coverage)
+  Key commands     make dev · make test · make migrate
+  ─────────────────────────────────────────────────────
+  Storing project context to memory...
+  ✓  memory_store("my-fastapi-app stack, entry point, auth pattern, test commands")
+
+> exit
+
+── Session B: brand-new session, no context loaded ──────────────────────────
+
+$ claude
+
+  System Aware — Open Apps: VS Code, Terminal | Memory: 19 stored facts
+  Last task: primed my-fastapi-app  (2 hours ago)
+
+> What do we know about my-fastapi-app?
+
+  Recalling context for "my-fastapi-app"...
+
+  Project: my-fastapi-app
+  ─────────────────────────────────────────────────────
+  Stack            FastAPI 0.111 / Python 3.11 / SQLAlchemy 2
+  Entry point      src/main.py (uvicorn, port 8000)
+  Database         PostgreSQL + Alembic
+  Auth             JWT / OAuth2 password flow
+  Test command     make test  (pytest, 82% coverage)
+  Last primed      2 hours ago
+  ─────────────────────────────────────────────────────
+  Ready to work. What would you like to do?
+
+
+══════════════════════════════════════════════════════════════════════════════
+  SCENARIO 3 — Common Sense Engine + Correction Capture
+══════════════════════════════════════════════════════════════════════════════
+
+── Common sense blocks a dangerous action ───────────────────────────────────
+
+> Delete all .log files in /var/log recursively
+
+  [common sense engine] BLOCKED
+  ─────────────────────────────────────────────────────
+  Rule matched:    "Never delete files in system directories (/var, /etc,
+                    /usr, /sys) without explicit user confirmation and a
+                    stated recovery plan."
+  Risk level:      HIGH — system log loss can break audit trails and
+                    make post-incident diagnosis impossible.
+  ─────────────────────────────────────────────────────
+  I will not run:  rm -rf /var/log/**/*.log
+
+  If you intended to clean up application logs, specify the path:
+    - Project logs:  ~/projects/<name>/logs/
+    - App logs:      /var/log/<your-app>/   (requires explicit confirmation)
+
+  What path did you mean?
+
+── User corrects; correction is captured automatically ───────────────────────
+
+> Don't delete system logs — only delete .log files inside ~/projects/
+
+  Understood. Updating target path.
+
+  Executing:  find ~/projects/ -name "*.log" -type f -delete
+
+  ✓  Deleted 14 log files across 3 projects.
+     ~/projects/my-fastapi-app/logs/  — 9 files removed
+     ~/projects/old-api/logs/         — 3 files removed
+     ~/projects/scraper/logs/         — 2 files removed
+
+  [memory] Capturing correction...
+  ✓  correction stored: "When asked to delete logs, scope to ~/projects/
+     not system directories. Confirmed by user on 2026-02-24."
+
+  This preference will be remembered in all future sessions.
+
+────────────────────────────────────────────────────────────────────────────────
+  End of demo transcript
+  Full recording instructions: demo/README.md
+────────────────────────────────────────────────────────────────────────────────
