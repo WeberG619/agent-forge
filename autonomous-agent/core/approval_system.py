@@ -262,8 +262,7 @@ def cleanup_old_approvals(max_age_hours: int = 24):
     approvals = _load_approvals()
     cutoff = datetime.now() - timedelta(hours=max_age_hours)
     cleaned = {
-        k: v for k, v in approvals.items()
-        if datetime.fromisoformat(v["created_at"]) > cutoff
+        k: v for k, v in approvals.items() if datetime.fromisoformat(v["created_at"]) > cutoff
     }
     if len(cleaned) < len(approvals):
         logger.info(f"Cleaned {len(approvals) - len(cleaned)} old approvals")
@@ -273,6 +272,7 @@ def cleanup_old_approvals(max_age_hours: int = 24):
 # ============================================
 # NOTIFICATION HELPERS
 # ============================================
+
 
 def _send_notification(message: str) -> bool:
     """Send a notification via the best available channel."""
@@ -343,6 +343,7 @@ def _send_telegram_with_keyboard(message: str, keyboard: dict) -> bool:
 
 if __name__ == "__main__":
     import sys
+
     logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) > 1 and sys.argv[1] == "test":

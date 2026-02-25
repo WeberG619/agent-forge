@@ -34,13 +34,12 @@ def get_seeds_as_prompt() -> str:
     data = json.loads(seeds_path.read_text())
     corrections = data.get("corrections", [])
 
-    lines = [
-        "## Pre-Loaded Experience (Known Mistakes to Avoid)",
-        ""
-    ]
+    lines = ["## Pre-Loaded Experience (Known Mistakes to Avoid)", ""]
 
     for c in corrections:
-        severity_icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(c["severity"], "!")
+        severity_icon = {"critical": "!!!", "high": "!!", "medium": "!", "low": "~"}.get(
+            c["severity"], "!"
+        )
         lines.append(f"### [{severity_icon}] {c['domain'].upper()}: {c['what_went_wrong']}")
         lines.append(f"**Do instead:** {c['correct_approach']}")
         lines.append(f"**Watch for:** {c['detection']}")
@@ -62,6 +61,7 @@ def get_full_injection(include_seeds: bool = True) -> str:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Generate common sense prompt injection")
     parser.add_argument("--with-seeds", action="store_true", help="Include seed corrections")
     parser.add_argument("--kernel-only", action="store_true", help="Only the kernel, no seeds")

@@ -24,12 +24,16 @@ import time
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVER_PS1 = os.path.join(SCRIPT_DIR, "server.ps1")
+
+
 # Convert WSL path to Windows path for PowerShell
 def _wsl_to_win(path):
-    m = _re.match(r'/mnt/([a-z])/(.*)', path)
+    m = _re.match(r"/mnt/([a-z])/(.*)", path)
     if m:
         return f"{m.group(1).upper()}:\\" + m.group(2).replace("/", "\\")
     return path.replace("/", "\\")
+
+
 SERVER_PS1_WIN = _wsl_to_win(SERVER_PS1)
 PID_FILE = os.path.join(SCRIPT_DIR, "bridge.pid")
 HEALTH_FILE = os.path.join(SCRIPT_DIR, "health.json")
@@ -59,9 +63,12 @@ class PowerShellProcess:
                     [
                         "powershell.exe",
                         "-NoProfile",
-                        "-WindowStyle", "Hidden",
-                        "-ExecutionPolicy", "Bypass",
-                        "-File", SERVER_PS1_WIN,
+                        "-WindowStyle",
+                        "Hidden",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        SERVER_PS1_WIN,
                     ],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
@@ -178,13 +185,18 @@ class BridgeHandler(socketserver.StreamRequestHandler):
             self.wfile.flush()
 
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            err = json.dumps({
-                "id": "error",
-                "success": False,
-                "stdout": "",
-                "stderr": f"Bridge protocol error: {e}",
-                "duration_ms": 0,
-            }) + "\n"
+            err = (
+                json.dumps(
+                    {
+                        "id": "error",
+                        "success": False,
+                        "stdout": "",
+                        "stderr": f"Bridge protocol error: {e}",
+                        "duration_ms": 0,
+                    }
+                )
+                + "\n"
+            )
             self.wfile.write(err.encode("utf-8"))
         except (BrokenPipeError, ConnectionResetError):
             pass

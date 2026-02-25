@@ -53,6 +53,7 @@ def _ping_bridge() -> float | None:
     try:
         sys.path.insert(0, SCRIPT_DIR)
         from client import ping
+
         return ping()
     except Exception:
         return None

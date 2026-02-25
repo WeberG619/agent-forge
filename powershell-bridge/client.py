@@ -36,6 +36,7 @@ READ_TIMEOUT = 60
 @dataclass
 class PSResult:
     """Result from a PowerShell command execution."""
+
     stdout: str
     stderr: str
     success: bool
@@ -210,9 +211,9 @@ def _cmd_benchmark():
             result = ps_exec(test_cmd)
             elapsed = (time.time() - start) * 1000
             bridge_times.append(elapsed)
-            print(f"    #{i+1}: {elapsed:.0f}ms (server: {result.duration_ms:.0f}ms)")
+            print(f"    #{i + 1}: {elapsed:.0f}ms (server: {result.duration_ms:.0f}ms)")
         except ConnectionError:
-            print(f"    #{i+1}: BRIDGE NOT AVAILABLE")
+            print(f"    #{i + 1}: BRIDGE NOT AVAILABLE")
             break
 
     if bridge_times:
@@ -229,7 +230,7 @@ def _cmd_benchmark():
         result = _direct_powershell(test_cmd)
         elapsed = (time.time() - start) * 1000
         direct_times.append(elapsed)
-        print(f"    #{i+1}: {elapsed:.0f}ms")
+        print(f"    #{i + 1}: {elapsed:.0f}ms")
 
     avg_direct = sum(direct_times) / len(direct_times)
     print(f"    Average: {avg_direct:.0f}ms")

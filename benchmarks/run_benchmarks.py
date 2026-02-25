@@ -43,6 +43,7 @@ if str(_BENCH_DIR) not in sys.path:
 # System info
 # ---------------------------------------------------------------------------
 
+
 def get_system_info() -> dict:
     """Collect system metadata for the benchmark header."""
     info = {
@@ -73,6 +74,7 @@ def get_system_info() -> dict:
     # SQLite version
     try:
         import sqlite3
+
         info["sqlite_version"] = sqlite3.sqlite_version
     except Exception:
         info["sqlite_version"] = "N/A"
@@ -99,6 +101,7 @@ def print_system_info(info: dict) -> None:
 # Table formatting
 # ---------------------------------------------------------------------------
 
+
 def _format_result_row(suite: str, result: dict) -> Optional[tuple[str, str, str]]:
     """
     Convert a result dict to a (suite, benchmark, value) tuple for table display.
@@ -110,19 +113,19 @@ def _format_result_row(suite: str, result: dict) -> Optional[tuple[str, str, str
     if "error" in result:
         value = f"ERROR: {result['error'][:50]}"
     elif "elapsed_s" in result and "ops_per_s" in result:
-        value = f"{result['elapsed_s']*1000:.2f} ms  |  {result['ops_per_s']:,} ops/s"
+        value = f"{result['elapsed_s'] * 1000:.2f} ms  |  {result['ops_per_s']:,} ops/s"
     elif "elapsed_s" in result and "per_call_ms" in result:
-        value = f"{result['elapsed_s']*1000:.2f} ms  |  {result['per_call_ms']:.3f} ms/call"
+        value = f"{result['elapsed_s'] * 1000:.2f} ms  |  {result['per_call_ms']:.3f} ms/call"
     elif "elapsed_s" in result and "per_file_ms" in result:
-        value = f"{result['elapsed_s']*1000:.2f} ms  |  {result['per_file_ms']:.3f} ms/file"
+        value = f"{result['elapsed_s'] * 1000:.2f} ms  |  {result['per_file_ms']:.3f} ms/file"
     elif "elapsed_s" in result and "per_call_us" in result:
-        value = f"{result['elapsed_s']*1000:.2f} ms  |  {result['per_call_us']:.1f} us/call"
+        value = f"{result['elapsed_s'] * 1000:.2f} ms  |  {result['per_call_us']:.1f} us/call"
     elif "elapsed_s" in result:
-        value = f"{result['elapsed_s']*1000:.3f} ms"
+        value = f"{result['elapsed_s'] * 1000:.3f} ms"
     elif "size_kb" in result:
         value = f"{result['size_kb']} KB  |  {result.get('bytes_per_row', '?')} bytes/row"
     elif "hit_ratio" in result:
-        value = f"hit_ratio={result['hit_ratio']:.1%}  |  {result.get('detail', {}).get('avg_hit_s', 0)*1000:.3f}ms hit"
+        value = f"hit_ratio={result['hit_ratio']:.1%}  |  {result.get('detail', {}).get('avg_hit_s', 0) * 1000:.3f}ms hit"
     elif "accuracy_pct" in result:
         value = f"accuracy={result['accuracy_pct']}"
     elif "ordering_correct" in result:
@@ -132,14 +135,18 @@ def _format_result_row(suite: str, result: dict) -> Optional[tuple[str, str, str
     elif "valid" in result and "invalid" in result:
         value = f"{result['valid']} valid, {result['invalid']} invalid, {result.get('total_errors', 0)} errors"
     elif "route_success_rate" in result:
-        value = f"success={result['route_success_rate']:.1%}  |  {result.get('ops_per_s', '?'):,} ops/s"
+        value = (
+            f"success={result['route_success_rate']:.1%}  |  {result.get('ops_per_s', '?'):,} ops/s"
+        )
     elif "cold_ms" in result:
         value = f"cold={result['cold_ms']:.2f}ms  |  warm={result['warm_avg_ms']:.2f}ms  |  {result['speedup']:.1f}x"
     elif "seed_count" in result:
         d = result.get("detail", {})
         value = f"{d.get('seed_count', '?')} seeds  |  cold={d.get('cold_load_ms', 0):.2f}ms"
     else:
-        value = str({k: v for k, v in result.items() if k not in ("benchmark", "label", "detail")})[:60]
+        value = str({k: v for k, v in result.items() if k not in ("benchmark", "label", "detail")})[
+            :60
+        ]
 
     return (suite, bench, value)
 
@@ -163,11 +170,7 @@ def print_results_table(suite_results: dict[str, list[dict]]) -> None:
         max(len("Result"), max(len(r[2]) for r in rows)),
     ]
 
-    header = (
-        f"{'Suite':<{col_w[0]}}  "
-        f"{'Benchmark':<{col_w[1]}}  "
-        f"{'Result'}"
-    )
+    header = f"{'Suite':<{col_w[0]}}  {'Benchmark':<{col_w[1]}}  {'Result'}"
     divider = "  ".join("-" * w for w in col_w)
 
     print(header)
@@ -193,6 +196,7 @@ AVAILABLE_SUITES = ["memory", "sense", "agents"]
 def load_suite(name: str):
     """Dynamically import and return a benchmark suite module."""
     import importlib
+
     module_name = f"bench_{name}"
     try:
         mod = importlib.import_module(module_name)
@@ -205,6 +209,7 @@ def load_suite(name: str):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -231,12 +236,14 @@ Examples:
         help="Write full results as JSON to this path",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Print per-benchmark details during run",
     )
     parser.add_argument(
-        "--quiet", "-q",
+        "--quiet",
+        "-q",
         action="store_true",
         help="Suppress per-suite headers; show only final table",
     )
@@ -259,7 +266,9 @@ Examples:
 
         mod = load_suite(suite_name)
         if mod is None:
-            all_results[suite_name] = [{"benchmark": "load_error", "error": f"Could not import bench_{suite_name}"}]
+            all_results[suite_name] = [
+                {"benchmark": "load_error", "error": f"Could not import bench_{suite_name}"}
+            ]
             continue
 
         suite_t0 = time.perf_counter()
@@ -267,11 +276,14 @@ Examples:
             suite_results = mod.run(verbose=args.verbose)
         except Exception as exc:
             import traceback
-            suite_results = [{
-                "benchmark": "runtime_error",
-                "error": str(exc),
-                "traceback": traceback.format_exc(),
-            }]
+
+            suite_results = [
+                {
+                    "benchmark": "runtime_error",
+                    "error": str(exc),
+                    "traceback": traceback.format_exc(),
+                }
+            ]
             if not args.quiet:
                 print(f"  [ERROR] Suite crashed: {exc}")
 
@@ -312,8 +324,7 @@ Examples:
 
     # Return non-zero if any suite had errors
     has_errors = any(
-        any("error" in r for r in suite_results)
-        for suite_results in all_results.values()
+        any("error" in r for r in suite_results) for suite_results in all_results.values()
     )
     return 1 if has_errors else 0
 

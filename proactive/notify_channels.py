@@ -92,7 +92,10 @@ def send_voice(message: str, max_chars: int = 500) -> bool:
         # Truncate long messages for voice (keep first section)
         voice_text = message
         if len(voice_text) > max_chars:
-            voice_text = voice_text[:max_chars].rsplit('\n', 1)[0] + "\n\n...and more details in notifications."
+            voice_text = (
+                voice_text[:max_chars].rsplit("\n", 1)[0]
+                + "\n\n...and more details in notifications."
+            )
 
         cmd_parts = VOICE_COMMAND.split()
         cmd_parts.append(voice_text)
@@ -150,6 +153,7 @@ def notify_console(message: str) -> bool:
 
 if __name__ == "__main__":
     import sys
+
     logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) > 1:

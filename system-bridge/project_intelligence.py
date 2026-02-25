@@ -29,6 +29,7 @@ PATTERNS_FILE = BASE_DIR / "learned_patterns.json"
 @dataclass
 class ProjectContext:
     """Represents the current project context."""
+
     project_name: str
     confidence: float  # 0-1
     sources: List[str]  # What indicated this project
@@ -43,6 +44,7 @@ class ProjectContext:
 @dataclass
 class WorkflowPattern:
     """A learned pattern of user behavior."""
+
     trigger: str  # What triggers this pattern
     typical_sequence: List[str]  # What usually follows
     frequency: int  # How often seen
@@ -154,31 +156,39 @@ class MemoryLoader:
         }
 
         # Recent memories
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT content, memory_type, importance, created_at
             FROM memories
             WHERE project = ? OR content LIKE ?
             ORDER BY created_at DESC
             LIMIT 10
-        """, (project_name, f"%{project_name}%"))
+        """,
+            (project_name, f"%{project_name}%"),
+        )
 
         for row in cursor.fetchall():
-            context["recent_memories"].append({
-                "content": row["content"][:300],
-                "type": row["memory_type"],
-                "importance": row["importance"],
-                "created": row["created_at"]
-            })
+            context["recent_memories"].append(
+                {
+                    "content": row["content"][:300],
+                    "type": row["memory_type"],
+                    "importance": row["importance"],
+                    "created": row["created_at"],
+                }
+            )
 
         # Corrections
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT content FROM memories
             WHERE memory_type = 'error'
             AND tags LIKE '%correction%'
             AND (project = ? OR content LIKE ?)
             ORDER BY created_at DESC
             LIMIT 5
-        """, (project_name, f"%{project_name}%"))
+        """,
+            (project_name, f"%{project_name}%"),
+        )
 
         for row in cursor.fetchall():
             content = row["content"]
@@ -188,31 +198,36 @@ class MemoryLoader:
                 context["corrections"].append(approach[:200])
 
         # Unfinished tasks (from session summaries)
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT content FROM memories
             WHERE tags LIKE '%session-summary%'
             AND content LIKE '%### Next Steps%'
             AND (project = ? OR content LIKE ?)
             ORDER BY created_at DESC
             LIMIT 3
-        """, (project_name, f"%{project_name}%"))
+        """,
+            (project_name, f"%{project_name}%"),
+        )
 
         for row in cursor.fetchall():
             content = row["content"]
             if "### Next Steps" in content:
                 steps_section = content.split("### Next Steps")[1]
-                steps = [s.strip() for s in steps_section.split('\n')
-                        if s.strip().startswith('-')]
+                steps = [s.strip() for s in steps_section.split("\n") if s.strip().startswith("-")]
                 context["unfinished_tasks"].extend(steps[:3])
 
         # Recent decisions
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT content FROM memories
             WHERE memory_type = 'decision'
             AND (project = ? OR content LIKE ?)
             ORDER BY created_at DESC
             LIMIT 5
-        """, (project_name, f"%{project_name}%"))
+        """,
+            (project_name, f"%{project_name}%"),
+        )
 
         for row in cursor.fetchall():
             context["decisions"].append(row["content"][:150])
@@ -236,7 +251,7 @@ class IntentPredictor:
 
     def _save_patterns(self):
         """Save learned patterns."""
-        with open(PATTERNS_FILE, 'w') as f:
+        with open(PATTERNS_FILE, "w") as f:
             json.dump(self.patterns, f, indent=2)
 
     def learn_sequence(self, actions: List[str]):
@@ -272,11 +287,17 @@ class IntentPredictor:
             # Common patterns based on active window content
             active_lower = active_window.lower()
             if "code" in active_lower or "editor" in active_lower:
-                predictions.append("User may want to: Run tests, commit changes, or switch to browser")
+                predictions.append(
+                    "User may want to: Run tests, commit changes, or switch to browser"
+                )
             elif "browser" in active_lower or "chrome" in active_lower:
-                predictions.append("User may want to: Research, review docs, or switch back to editor")
+                predictions.append(
+                    "User may want to: Research, review docs, or switch back to editor"
+                )
             elif "terminal" in active_lower or "console" in active_lower:
-                predictions.append("User may want to: Run commands, check logs, or return to editor")
+                predictions.append(
+                    "User may want to: Run commands, check logs, or return to editor"
+                )
 
         return predictions
 
@@ -288,7 +309,7 @@ class IntentPredictor:
             projects = list(correlations.keys())
             # Alert if multiple distinct projects are detected simultaneously
             if len(projects) >= 2:
-                project_list = ', '.join(projects[:3])
+                project_list = ", ".join(projects[:3])
                 mismatches.append(
                     f"Multiple projects detected simultaneously: {project_list}. "
                     f"Make sure you're working on the intended project."
@@ -322,8 +343,9 @@ class ActionSuggester:
 class ProjectIntelligence:
     """Main intelligence engine that ties everything together."""
 
-    def __init__(self, memory_db_path: Optional[Path] = None,
-                 project_patterns: Optional[Dict] = None):
+    def __init__(
+        self, memory_db_path: Optional[Path] = None, project_patterns: Optional[Dict] = None
+    ):
         """Initialize the project intelligence engine.
 
         Args:
@@ -351,8 +373,7 @@ class ProjectIntelligence:
         # Determine primary project
         if correlations:
             # Pick project with most sources and highest confidence
-            primary = max(correlations.items(),
-                         key=lambda x: sum(c for _, c in x[1]))
+            primary = max(correlations.items(), key=lambda x: sum(c for _, c in x[1]))
             project_name = primary[0]
             confidence = sum(c for _, c in primary[1]) / len(primary[1])
             sources = [s for s, _ in primary[1]]
@@ -396,7 +417,7 @@ class ProjectIntelligence:
         output = asdict(context)
         output["generated_at"] = datetime.now().isoformat()
 
-        with open(INTELLIGENCE_FILE, 'w') as f:
+        with open(INTELLIGENCE_FILE, "w") as f:
             json.dump(output, f, indent=2)
 
     def get_briefing(self) -> str:

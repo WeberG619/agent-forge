@@ -35,6 +35,7 @@ MEMORY_DB.parent.mkdir(parents=True, exist_ok=True)
 # DATABASE SETUP
 # ============================================
 
+
 def init_db():
     """Initialize the unified memory database."""
     conn = sqlite3.connect(str(MEMORY_DB))
@@ -91,9 +92,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 # ============================================
 # UNIFIED MEMORY CLASS
 # ============================================
+
 
 class UnifiedMemory:
     """
@@ -108,9 +111,14 @@ class UnifiedMemory:
     # STORE OPERATIONS
     # ==========================================
 
-    def store(self, content: str, category: str = "general",
-              tags: List[str] = None, importance: int = 5,
-              project: str = None) -> int:
+    def store(
+        self,
+        content: str,
+        category: str = "general",
+        tags: List[str] = None,
+        importance: int = 5,
+        project: str = None,
+    ) -> int:
         """Store a memory."""
         conn = sqlite3.connect(str(MEMORY_DB))
         cur = conn.cursor()
@@ -118,10 +126,13 @@ class UnifiedMemory:
         now = datetime.now().isoformat()
         tags_str = ",".join(tags) if tags else ""
 
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO memories (content, category, tags, importance, project, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (content, category, tags_str, importance, project, now))
+        """,
+            (content, category, tags_str, importance, project, now),
+        )
 
         memory_id = cur.lastrowid
         conn.commit()
@@ -130,20 +141,28 @@ class UnifiedMemory:
         logger.info(f"Stored memory #{memory_id}: {content[:50]}...")
         return memory_id
 
-    def store_correction(self, what_claude_said: str, what_was_wrong: str,
-                        correct_approach: str, category: str = "general",
-                        project: str = None) -> int:
+    def store_correction(
+        self,
+        what_claude_said: str,
+        what_was_wrong: str,
+        correct_approach: str,
+        category: str = "general",
+        project: str = None,
+    ) -> int:
         """Store a correction for self-improvement."""
         conn = sqlite3.connect(str(MEMORY_DB))
         cur = conn.cursor()
 
         now = datetime.now().isoformat()
 
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO corrections (what_claude_said, what_was_wrong, correct_approach,
                                     category, project, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (what_claude_said, what_was_wrong, correct_approach, category, project, now))
+        """,
+            (what_claude_said, what_was_wrong, correct_approach, category, project, now),
+        )
 
         correction_id = cur.lastrowid
         conn.commit()
@@ -156,8 +175,9 @@ class UnifiedMemory:
     # RECALL OPERATIONS
     # ==========================================
 
-    def recall(self, query: str, limit: int = 5,
-               category: str = None, project: str = None) -> List[Dict]:
+    def recall(
+        self, query: str, limit: int = 5, category: str = None, project: str = None
+    ) -> List[Dict]:
         """Recall memories matching a query."""
         conn = sqlite3.connect(str(MEMORY_DB))
         conn.row_factory = sqlite3.Row
@@ -183,18 +203,22 @@ class UnifiedMemory:
 
         # Update access counts
         for row in rows:
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE memories SET access_count = access_count + 1, accessed_at = ?
                 WHERE id = ?
-            """, (datetime.now().isoformat(), row["id"]))
+            """,
+                (datetime.now().isoformat(), row["id"]),
+            )
 
         conn.commit()
         conn.close()
 
         return [dict(row) for row in rows]
 
-    def get_corrections(self, category: str = None, project: str = None,
-                       limit: int = 10) -> List[Dict]:
+    def get_corrections(
+        self, category: str = None, project: str = None, limit: int = 10
+    ) -> List[Dict]:
         """Get recent corrections."""
         conn = sqlite3.connect(str(MEMORY_DB))
         conn.row_factory = sqlite3.Row
@@ -235,12 +259,15 @@ class UnifiedMemory:
 
         for keyword in keywords:
             if len(keyword) > 3:  # Skip short words
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT * FROM corrections
                     WHERE what_claude_said LIKE ? OR correct_approach LIKE ?
                     ORDER BY effectiveness_score DESC
                     LIMIT 3
-                """, (f"%{keyword}%", f"%{keyword}%"))
+                """,
+                    (f"%{keyword}%", f"%{keyword}%"),
+                )
 
                 for row in cur.fetchall():
                     if dict(row) not in relevant:
@@ -259,18 +286,24 @@ class UnifiedMemory:
         cur = conn.cursor()
 
         if helped:
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE corrections
                 SET times_helped = times_helped + 1,
                     effectiveness_score = effectiveness_score + 1
                 WHERE id = ?
-            """, (correction_id,))
+            """,
+                (correction_id,),
+            )
         else:
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE corrections
                 SET effectiveness_score = effectiveness_score - 0.5
                 WHERE id = ?
-            """, (correction_id,))
+            """,
+                (correction_id,),
+            )
 
         conn.commit()
         conn.close()
@@ -288,26 +321,35 @@ class UnifiedMemory:
         data_str = json.dumps(data) if data else None
 
         # Check if pattern exists
-        cur.execute("""
+        cur.execute(
+            """
             SELECT id, frequency FROM patterns
             WHERE pattern_type = ? AND description = ?
-        """, (pattern_type, description))
+        """,
+            (pattern_type, description),
+        )
 
         row = cur.fetchone()
 
         if row:
             # Update existing pattern
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE patterns
                 SET frequency = frequency + 1, last_seen = ?, data = ?
                 WHERE id = ?
-            """, (now, data_str, row[0]))
+            """,
+                (now, data_str, row[0]),
+            )
         else:
             # Insert new pattern
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO patterns (pattern_type, description, last_seen, data)
                 VALUES (?, ?, ?, ?)
-            """, (pattern_type, description, now, data_str))
+            """,
+                (pattern_type, description, now, data_str),
+            )
 
         conn.commit()
         conn.close()
@@ -379,7 +421,7 @@ class UnifiedMemory:
         context = {
             "recent_corrections": self.get_corrections(project=current_project, limit=5),
             "patterns": self.get_patterns(min_frequency=3),
-            "stats": self.get_stats()
+            "stats": self.get_stats(),
         }
 
         # Get high-importance memories for the project
@@ -388,12 +430,15 @@ class UnifiedMemory:
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
 
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT * FROM memories
                 WHERE project = ? AND importance >= 7
                 ORDER BY created_at DESC
                 LIMIT 5
-            """, (current_project,))
+            """,
+                (current_project,),
+            )
 
             context["project_memories"] = [dict(row) for row in cur.fetchall()]
             conn.close()
@@ -407,6 +452,7 @@ class UnifiedMemory:
 
 _memory = None
 
+
 def get_memory() -> UnifiedMemory:
     """Get the singleton memory instance."""
     global _memory
@@ -414,17 +460,21 @@ def get_memory() -> UnifiedMemory:
         _memory = UnifiedMemory()
     return _memory
 
+
 def store(content: str, **kwargs) -> int:
     """Store a memory."""
     return get_memory().store(content, **kwargs)
+
 
 def recall(query: str, **kwargs) -> List[Dict]:
     """Recall memories."""
     return get_memory().recall(query, **kwargs)
 
+
 def store_correction(**kwargs) -> int:
     """Store a correction."""
     return get_memory().store_correction(**kwargs)
+
 
 def check_before_action(planned_action: str, context: str = "") -> List[Dict]:
     """Check for relevant corrections before an action."""
@@ -442,9 +492,7 @@ if __name__ == "__main__":
 
     # Test store
     mem_id = memory.store(
-        "User prefers specific email client configuration",
-        category="preferences",
-        importance=9
+        "User prefers specific email client configuration", category="preferences", importance=9
     )
     print(f"Stored memory #{mem_id}")
 
@@ -453,7 +501,7 @@ if __name__ == "__main__":
         what_claude_said="Used wrong tool for task",
         what_was_wrong="Should have used a different approach",
         correct_approach="Always check user preferences first",
-        category="workflow"
+        category="workflow",
     )
     print(f"Stored correction #{corr_id}")
 

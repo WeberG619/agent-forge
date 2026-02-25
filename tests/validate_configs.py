@@ -25,7 +25,15 @@ import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 
-EXCLUDE_DIRS = {".git", "node_modules", "__pycache__", ".mypy_cache", ".ruff_cache", "dist", "build"}
+EXCLUDE_DIRS = {
+    ".git",
+    "node_modules",
+    "__pycache__",
+    ".mypy_cache",
+    ".ruff_cache",
+    "dist",
+    "build",
+}
 
 # ---------------------------------------------------------------------------
 # Helpers

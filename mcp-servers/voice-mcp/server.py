@@ -35,6 +35,7 @@ except ImportError:
 try:
     import sounddevice as sd
     import numpy as np
+
     HAS_AUDIO_INPUT = True
 except ImportError:
     HAS_AUDIO_INPUT = False
@@ -42,6 +43,7 @@ except ImportError:
 
 try:
     import edge_tts
+
     HAS_TTS = True
 except ImportError:
     HAS_TTS = False
@@ -49,6 +51,7 @@ except ImportError:
 
 try:
     import openai
+
     HAS_WHISPER = bool(os.getenv("OPENAI_API_KEY"))
 except ImportError:
     HAS_WHISPER = False
@@ -73,8 +76,9 @@ class VoiceProcessor:
     def __init__(self):
         self.is_listening = False
 
-    def record_audio(self, duration: float = 5.0, silence_threshold: float = 0.02,
-                     silence_duration: float = 1.5) -> bytes:
+    def record_audio(
+        self, duration: float = 5.0, silence_threshold: float = 0.02, silence_duration: float = 1.5
+    ) -> bytes:
         """Record audio until silence is detected or max duration reached."""
         if not HAS_AUDIO_INPUT:
             return b""
@@ -90,8 +94,12 @@ class VoiceProcessor:
         self.is_listening = True
 
         try:
-            with sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS,
-                               dtype=np.float32, blocksize=int(SAMPLE_RATE * chunk_duration)) as stream:
+            with sd.InputStream(
+                samplerate=SAMPLE_RATE,
+                channels=CHANNELS,
+                dtype=np.float32,
+                blocksize=int(SAMPLE_RATE * chunk_duration),
+            ) as stream:
                 for _ in range(max_chunks):
                     if not self.is_listening:
                         break
@@ -121,7 +129,7 @@ class VoiceProcessor:
         audio_int16 = (audio_data * 32767).astype(np.int16)
 
         wav_buffer = io.BytesIO()
-        with wave.open(wav_buffer, 'wb') as wav_file:
+        with wave.open(wav_buffer, "wb") as wav_file:
             wav_file.setnchannels(CHANNELS)
             wav_file.setsampwidth(2)
             wav_file.setframerate(SAMPLE_RATE)
@@ -144,9 +152,7 @@ class VoiceProcessor:
             try:
                 with open(temp_path, "rb") as audio_file:
                     result = client.audio.transcriptions.create(
-                        model="whisper-1",
-                        file=audio_file,
-                        response_format="text"
+                        model="whisper-1", file=audio_file, response_format="text"
                     )
                 return result.strip()
             finally:
@@ -177,18 +183,27 @@ class VoiceProcessor:
                 # Convert WSL path to Windows path
                 for drive_letter in "cdefghij":
                     if win_path.startswith(f"/mnt/{drive_letter}/"):
-                        win_path = f"{drive_letter.upper()}:\\" + win_path[len(f"/mnt/{drive_letter}/"):].replace("/", "\\")
+                        win_path = f"{drive_letter.upper()}:\\" + win_path[
+                            len(f"/mnt/{drive_letter}/") :
+                        ].replace("/", "\\")
                         break
 
                 subprocess.run(
-                    ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command",
-                     f'Add-Type -AssemblyName PresentationCore; '
-                     f'$player = New-Object System.Windows.Media.MediaPlayer; '
-                     f'$player.Open("{win_path}"); $player.Play(); '
-                     f'Start-Sleep -Milliseconds 100; '
-                     f'while($player.Position -lt $player.NaturalDuration.TimeSpan) '
-                     f'{{ Start-Sleep -Milliseconds 100 }}'],
-                    capture_output=True, timeout=30
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-WindowStyle",
+                        "Hidden",
+                        "-Command",
+                        f"Add-Type -AssemblyName PresentationCore; "
+                        f"$player = New-Object System.Windows.Media.MediaPlayer; "
+                        f'$player.Open("{win_path}"); $player.Play(); '
+                        f"Start-Sleep -Milliseconds 100; "
+                        f"while($player.Position -lt $player.NaturalDuration.TimeSpan) "
+                        f"{{ Start-Sleep -Milliseconds 100 }}",
+                    ],
+                    capture_output=True,
+                    timeout=30,
                 )
             elif sys.platform == "darwin":
                 # macOS - use afplay
@@ -248,45 +263,47 @@ async def list_tools():
     ]
 
     if HAS_AUDIO_INPUT and HAS_WHISPER:
-        tools.extend([
-            Tool(
-                name="voice_listen",
-                description="Listen for voice input and transcribe it. Returns the transcribed text.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "max_duration": {
-                            "type": "number",
-                            "description": "Maximum recording duration in seconds (default: 10)",
-                            "default": 10,
-                        },
-                        "prompt": {
-                            "type": "string",
-                            "description": "Optional text to speak before listening",
-                        },
-                    },
-                },
-            ),
-            Tool(
-                name="voice_conversation",
-                description="Speak a prompt, then listen for a voice response and transcribe it.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "prompt": {
-                            "type": "string",
-                            "description": "What to say before listening",
-                        },
-                        "max_duration": {
-                            "type": "number",
-                            "description": "Max listen duration in seconds",
-                            "default": 10,
+        tools.extend(
+            [
+                Tool(
+                    name="voice_listen",
+                    description="Listen for voice input and transcribe it. Returns the transcribed text.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "max_duration": {
+                                "type": "number",
+                                "description": "Maximum recording duration in seconds (default: 10)",
+                                "default": 10,
+                            },
+                            "prompt": {
+                                "type": "string",
+                                "description": "Optional text to speak before listening",
+                            },
                         },
                     },
-                    "required": ["prompt"],
-                },
-            ),
-        ])
+                ),
+                Tool(
+                    name="voice_conversation",
+                    description="Speak a prompt, then listen for a voice response and transcribe it.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "prompt": {
+                                "type": "string",
+                                "description": "What to say before listening",
+                            },
+                            "max_duration": {
+                                "type": "number",
+                                "description": "Max listen duration in seconds",
+                                "default": 10,
+                            },
+                        },
+                        "required": ["prompt"],
+                    },
+                ),
+            ]
+        )
 
     return tools
 
@@ -303,20 +320,33 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text", text="No text provided")]
 
         if not HAS_TTS:
-            return [TextContent(type="text", text="edge-tts not installed. Run: pip install edge-tts")]
+            return [
+                TextContent(type="text", text="edge-tts not installed. Run: pip install edge-tts")
+            ]
 
         success = await voice_processor.speak(text, voice)
 
         if success:
-            return [TextContent(type="text", text=f"Spoke: {text[:100]}{'...' if len(text) > 100 else ''}")]
+            return [
+                TextContent(
+                    type="text", text=f"Spoke: {text[:100]}{'...' if len(text) > 100 else ''}"
+                )
+            ]
         else:
             return [TextContent(type="text", text="Failed to speak - check audio output")]
 
     elif name == "voice_listen":
         if not HAS_AUDIO_INPUT:
-            return [TextContent(type="text", text="Voice input requires: pip install sounddevice numpy")]
+            return [
+                TextContent(type="text", text="Voice input requires: pip install sounddevice numpy")
+            ]
         if not HAS_WHISPER:
-            return [TextContent(type="text", text="Transcription requires: pip install openai + OPENAI_API_KEY env var")]
+            return [
+                TextContent(
+                    type="text",
+                    text="Transcription requires: pip install openai + OPENAI_API_KEY env var",
+                )
+            ]
 
         max_duration = arguments.get("max_duration", 10)
         prompt = arguments.get("prompt")
@@ -338,7 +368,12 @@ async def call_tool(name: str, arguments: dict):
 
     elif name == "voice_conversation":
         if not HAS_AUDIO_INPUT or not HAS_WHISPER:
-            return [TextContent(type="text", text="Voice conversation requires sounddevice, numpy, openai, and OPENAI_API_KEY")]
+            return [
+                TextContent(
+                    type="text",
+                    text="Voice conversation requires sounddevice, numpy, openai, and OPENAI_API_KEY",
+                )
+            ]
 
         prompt = arguments.get("prompt", "")
         max_duration = arguments.get("max_duration", 10)
@@ -364,8 +399,14 @@ async def main():
     """Run the MCP server."""
     print("Voice MCP Server starting...", file=sys.stderr, flush=True)
     print(f"TTS: {'enabled' if HAS_TTS else 'disabled (pip install edge-tts)'}", file=sys.stderr)
-    print(f"Voice input: {'enabled' if HAS_AUDIO_INPUT else 'disabled (pip install sounddevice numpy)'}", file=sys.stderr)
-    print(f"Whisper: {'enabled' if HAS_WHISPER else 'disabled (pip install openai + set OPENAI_API_KEY)'}", file=sys.stderr)
+    print(
+        f"Voice input: {'enabled' if HAS_AUDIO_INPUT else 'disabled (pip install sounddevice numpy)'}",
+        file=sys.stderr,
+    )
+    print(
+        f"Whisper: {'enabled' if HAS_WHISPER else 'disabled (pip install openai + set OPENAI_API_KEY)'}",
+        file=sys.stderr,
+    )
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())

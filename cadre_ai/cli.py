@@ -31,6 +31,7 @@ from cadre_ai import __version__
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _find_install_script(name: str) -> Path | None:
     """Locate install.sh / uninstall.sh relative to this package."""
     # When installed via pip the shell scripts live in package data.
@@ -73,6 +74,7 @@ def _check(label: str, found: bool, detail: str = "") -> bool:
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+
 
 def cmd_install(args: argparse.Namespace) -> int:
     script = _find_install_script("install.sh")
@@ -173,8 +175,10 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # pyyaml (core dependency)
     try:
         import yaml  # noqa: F401
+
         yaml_ok = True
         import importlib.metadata
+
         try:
             yaml_ver = importlib.metadata.version("pyyaml")
         except Exception:
@@ -187,6 +191,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # fastembed (optional — memory)
     try:
         import fastembed  # noqa: F401
+
         fe_ok = True
         fe_detail = "installed"
     except ImportError:
@@ -197,6 +202,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     # edge-tts (optional — voice)
     try:
         import edge_tts  # noqa: F401
+
         tts_ok = True
         tts_detail = "installed"
     except ImportError:
@@ -351,6 +357,7 @@ def _plugin_remove(args: argparse.Namespace, plugins) -> int:  # type: ignore[ty
 # Parser
 # ---------------------------------------------------------------------------
 
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cadre",
@@ -372,7 +379,8 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--version", "-V",
+        "--version",
+        "-V",
         action="version",
         version=f"cadre-ai {__version__}",
     )
@@ -419,7 +427,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Remove cadre from this system.",
     )
     uninstall_parser.add_argument(
-        "--yes", "-y",
+        "--yes",
+        "-y",
         action="store_true",
         help="Skip confirmation prompt.",
     )
@@ -503,6 +512,7 @@ def _build_parser() -> argparse.ArgumentParser:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main(argv: list[str] | None = None) -> None:
     parser = _build_parser()

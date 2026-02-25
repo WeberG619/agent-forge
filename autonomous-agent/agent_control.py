@@ -118,12 +118,9 @@ def send_control_signal(action: str) -> str:
         return "Agent is not running"
 
     # Write control signal to file (agent watches this)
-    signal = {
-        "action": action,
-        "timestamp": datetime.now().isoformat()
-    }
+    signal = {"action": action, "timestamp": datetime.now().isoformat()}
 
-    with open(CONTROL_FILE, 'w') as f:
+    with open(CONTROL_FILE, "w") as f:
         json.dump(signal, f)
 
     return f"Sent '{action}' signal to agent"
@@ -154,7 +151,9 @@ def main():
     # Task
     task_parser = subparsers.add_parser("task", help="Add a background task")
     task_parser.add_argument("prompt", help="Task prompt for Claude")
-    task_parser.add_argument("-p", "--priority", type=int, default=5, help="Priority 1-10 (1=highest)")
+    task_parser.add_argument(
+        "-p", "--priority", type=int, default=5, help="Priority 1-10 (1=highest)"
+    )
 
     # Tasks list
     subparsers.add_parser("tasks", help="List pending tasks")

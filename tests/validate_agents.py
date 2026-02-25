@@ -52,10 +52,7 @@ def validate_md_agent(path: Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
 
     # Extract all H2 headings (## Heading)
-    found_sections = {
-        m.group(1).strip()
-        for m in re.finditer(r"^##\s+(.+)$", text, re.MULTILINE)
-    }
+    found_sections = {m.group(1).strip() for m in re.finditer(r"^##\s+(.+)$", text, re.MULTILINE)}
 
     allowed_missing = MD_KNOWN_EXCEPTIONS.get(stem, set())
     required = MD_REQUIRED_SECTIONS - allowed_missing

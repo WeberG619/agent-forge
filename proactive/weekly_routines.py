@@ -20,10 +20,9 @@ from pathlib import Path
 
 logger = logging.getLogger("weekly_routines")
 
-ALERTS_FILE = Path(os.getenv(
-    "PROACTIVE_ALERTS_FILE",
-    str(Path(__file__).parent / "email_alerts.json")
-))
+ALERTS_FILE = Path(
+    os.getenv("PROACTIVE_ALERTS_FILE", str(Path(__file__).parent / "email_alerts.json"))
+)
 
 DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -35,15 +34,20 @@ def _get_events_for_range(start_dt, end_dt):
     """
     try:
         from calendar_client import get_service
+
         service = get_service()
 
-        events_result = service.events().list(
-            calendarId="primary",
-            timeMin=start_dt.isoformat() + "Z",
-            timeMax=end_dt.isoformat() + "Z",
-            singleEvents=True,
-            orderBy="startTime",
-        ).execute()
+        events_result = (
+            service.events()
+            .list(
+                calendarId="primary",
+                timeMin=start_dt.isoformat() + "Z",
+                timeMax=end_dt.isoformat() + "Z",
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
 
         return events_result.get("items", [])
     except ImportError:

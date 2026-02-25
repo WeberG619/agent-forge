@@ -16,23 +16,24 @@ from enum import Enum
 
 
 class ActionType(Enum):
-    NOTIFY = "notify"           # Send notification
-    PREPARE = "prepare"         # Prepare context/briefing
-    EXECUTE = "execute"         # Execute a command
-    QUEUE = "queue"             # Queue for later
-    LOG = "log"                 # Just log, no action
+    NOTIFY = "notify"  # Send notification
+    PREPARE = "prepare"  # Prepare context/briefing
+    EXECUTE = "execute"  # Execute a command
+    QUEUE = "queue"  # Queue for later
+    LOG = "log"  # Just log, no action
 
 
 class Priority(Enum):
-    CRITICAL = 1   # Immediate notification
-    HIGH = 2       # Soon, bypass some filters
-    MEDIUM = 3     # Normal
-    LOW = 4        # Can wait, subject to quiet hours
+    CRITICAL = 1  # Immediate notification
+    HIGH = 2  # Soon, bypass some filters
+    MEDIUM = 3  # Normal
+    LOW = 4  # Can wait, subject to quiet hours
 
 
 @dataclass
 class Decision:
     """A decision about what action to take."""
+
     action: ActionType
     priority: Priority
     title: str
@@ -43,6 +44,7 @@ class Decision:
 @dataclass
 class Trigger:
     """A trigger rule that can fire decisions."""
+
     name: str
     condition: Callable[[Dict], bool]
     action: Callable[[Dict], Decision]
@@ -79,26 +81,30 @@ class DecisionEngine:
         """Set up default trigger rules."""
 
         # High memory trigger
-        self.triggers.append(Trigger(
-            name="high_memory",
-            condition=lambda s: s.get("system", {}).get("memory_percent", 0) > 85,
-            action=lambda s: Decision(
-                action=ActionType.NOTIFY,
-                priority=Priority.MEDIUM,
-                title="High Memory Usage",
-                message=f"Memory at {s.get('system', {}).get('memory_percent', 0)}%. Consider closing unused apps.",
-                data={"memory": s.get("system", {})}
-            ),
-            cooldown_minutes=60
-        ))
+        self.triggers.append(
+            Trigger(
+                name="high_memory",
+                condition=lambda s: s.get("system", {}).get("memory_percent", 0) > 85,
+                action=lambda s: Decision(
+                    action=ActionType.NOTIFY,
+                    priority=Priority.MEDIUM,
+                    title="High Memory Usage",
+                    message=f"Memory at {s.get('system', {}).get('memory_percent', 0)}%. Consider closing unused apps.",
+                    data={"memory": s.get("system", {})},
+                ),
+                cooldown_minutes=60,
+            )
+        )
 
         # Urgent email keywords
-        self.triggers.append(Trigger(
-            name="urgent_email",
-            condition=self._has_urgent_email,
-            action=self._make_urgent_email_decision,
-            cooldown_minutes=15
-        ))
+        self.triggers.append(
+            Trigger(
+                name="urgent_email",
+                condition=self._has_urgent_email,
+                action=self._make_urgent_email_decision,
+                cooldown_minutes=15,
+            )
+        )
 
     # ==========================================
     # CONDITION HELPERS
@@ -132,7 +138,7 @@ class DecisionEngine:
             priority=Priority.HIGH,
             title="Urgent Email Detected",
             message="\n".join(urgent_emails),
-            data={"emails": urgent_emails}
+            data={"emails": urgent_emails},
         )
 
     # ==========================================

@@ -24,18 +24,22 @@ BASE_DIR = Path(__file__).parent
 WORKFLOWS_DB = BASE_DIR / "workflows.db"
 PATTERNS_FILE = BASE_DIR / "learned_patterns.json"
 
+
 @dataclass
 class Action:
     """Represents a user action."""
+
     timestamp: str
     action_type: str  # app_switch, file_open, view_change, command, etc.
     details: Dict
     project: Optional[str] = None
     context: Optional[str] = None  # What was happening when this occurred
 
+
 @dataclass
 class WorkflowPattern:
     """A learned workflow pattern."""
+
     name: str
     trigger: str
     sequence: List[str]
@@ -43,6 +47,7 @@ class WorkflowPattern:
     avg_duration_seconds: float
     project_types: List[str]
     success_rate: float
+
 
 class WorkflowDatabase:
     """SQLite database for workflow storage."""
@@ -110,7 +115,9 @@ class WorkflowDatabase:
 
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_actions_type ON actions(action_type)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_actions_project ON actions(project)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_sequences_trigger ON sequences(trigger_action)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sequences_trigger ON sequences(trigger_action)"
+        )
 
         conn.commit()
         conn.close()
@@ -120,78 +127,100 @@ class WorkflowDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO actions (timestamp, action_type, details, project, context, session_id)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            action.timestamp,
-            action.action_type,
-            json.dumps(action.details),
-            action.project,
-            action.context,
-            session_id
-        ))
+        """,
+            (
+                action.timestamp,
+                action.action_type,
+                json.dumps(action.details),
+                action.project,
+                action.context,
+                session_id,
+            ),
+        )
 
         conn.commit()
         conn.close()
 
-    def learn_sequence(self, trigger: str, next_action: str, gap_seconds: float, project: str = None):
+    def learn_sequence(
+        self, trigger: str, next_action: str, gap_seconds: float, project: str = None
+    ):
         """Learn or update a sequence pattern."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
         # Check if exists
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, count, avg_gap_seconds FROM sequences
             WHERE trigger_action = ? AND next_action = ? AND (project = ? OR project IS NULL)
-        """, (trigger, next_action, project))
+        """,
+            (trigger, next_action, project),
+        )
 
         row = cursor.fetchone()
         if row:
             # Update existing
             new_count = row[1] + 1
             new_avg = ((row[2] * row[1]) + gap_seconds) / new_count
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE sequences
                 SET count = ?, avg_gap_seconds = ?, last_seen = ?
                 WHERE id = ?
-            """, (new_count, new_avg, datetime.now().isoformat(), row[0]))
+            """,
+                (new_count, new_avg, datetime.now().isoformat(), row[0]),
+            )
         else:
             # Insert new
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO sequences (trigger_action, next_action, count, avg_gap_seconds, project, last_seen)
                 VALUES (?, ?, 1, ?, ?, ?)
-            """, (trigger, next_action, gap_seconds, project, datetime.now().isoformat()))
+            """,
+                (trigger, next_action, gap_seconds, project, datetime.now().isoformat()),
+            )
 
         conn.commit()
         conn.close()
 
-    def get_likely_next_actions(self, current_action: str, project: str = None, limit: int = 5) -> List[Tuple[str, float]]:
+    def get_likely_next_actions(
+        self, current_action: str, project: str = None, limit: int = 5
+    ) -> List[Tuple[str, float]]:
         """Get most likely next actions based on history."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
         # Get sequences sorted by frequency
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT next_action, count, avg_gap_seconds
             FROM sequences
             WHERE trigger_action = ?
             AND (project = ? OR project IS NULL)
             ORDER BY count DESC
             LIMIT ?
-        """, (current_action, project, limit))
+        """,
+            (current_action, project, limit),
+        )
 
         results = []
         total = sum(row[1] for row in cursor.fetchall())
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT next_action, count, avg_gap_seconds
             FROM sequences
             WHERE trigger_action = ?
             AND (project = ? OR project IS NULL)
             ORDER BY count DESC
             LIMIT ?
-        """, (current_action, project, limit))
+        """,
+            (current_action, project, limit),
+        )
 
         for row in cursor.fetchall():
             probability = row[1] / total if total > 0 else 0
@@ -206,11 +235,14 @@ class WorkflowDatabase:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM actions
             ORDER BY timestamp DESC
             LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
 
         results = [dict(row) for row in cursor.fetchall()]
         conn.close()
@@ -235,7 +267,7 @@ class WorkflowLearner:
             action_type=action_type,
             details=details,
             project=project,
-            context=context
+            context=context,
         )
 
         # Record to database
@@ -247,7 +279,9 @@ class WorkflowLearner:
 
             # Only learn if gap is reasonable (< 5 minutes)
             if gap < 300:
-                trigger = f"{self.last_action.action_type}:{self.last_action.details.get('name', '')}"
+                trigger = (
+                    f"{self.last_action.action_type}:{self.last_action.details.get('name', '')}"
+                )
                 next_act = f"{action_type}:{details.get('name', '')}"
                 self.db.learn_sequence(trigger, next_act, gap, project)
 
@@ -257,7 +291,9 @@ class WorkflowLearner:
     def predict_next(self, current_action: str = None, project: str = None) -> List[Dict]:
         """Predict likely next actions."""
         if current_action is None and self.last_action:
-            current_action = f"{self.last_action.action_type}:{self.last_action.details.get('name', '')}"
+            current_action = (
+                f"{self.last_action.action_type}:{self.last_action.details.get('name', '')}"
+            )
 
         if not current_action:
             return []
@@ -268,7 +304,7 @@ class WorkflowLearner:
             {
                 "action": pred[0],
                 "probability": f"{pred[1]:.0%}",
-                "typical_delay": f"{pred[2]:.1f}s" if len(pred) > 2 else "unknown"
+                "typical_delay": f"{pred[2]:.1f}s" if len(pred) > 2 else "unknown",
             }
             for pred in predictions
         ]
@@ -343,7 +379,7 @@ class ActionRecorder:
             "recorded": True,
             "action_type": action_type,
             "anomaly": anomaly,
-            "predictions": self.learner.predict_next(project=project)
+            "predictions": self.learner.predict_next(project=project),
         }
 
 
@@ -362,14 +398,17 @@ class PatternAnalyzer:
         conn = sqlite3.connect(self.db.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT trigger_action, next_action, count, avg_gap_seconds, project, last_seen
             FROM sequences
             WHERE count >= ?
             AND (avg_gap_seconds IS NULL OR avg_gap_seconds >= ?)
             AND trigger_action != next_action
             ORDER BY count DESC
-        """, (min_count, min_gap))
+        """,
+            (min_count, min_gap),
+        )
         results = [dict(row) for row in cursor.fetchall()]
         conn.close()
         return results
@@ -385,83 +424,90 @@ class PatternAnalyzer:
             return []
 
         # Prioritize focus events (real user actions) over close events (often batch artifacts)
-        focus_sequences = [s for s in sequences if 'focus:' in s['trigger_action'] or 'open:' in s['trigger_action']]
+        focus_sequences = [
+            s
+            for s in sequences
+            if "focus:" in s["trigger_action"] or "open:" in s["trigger_action"]
+        ]
         if len(focus_sequences) >= 5:
             sequences = focus_sequences
 
         # Build adjacency map: trigger -> [(next, count, gap)]
         adjacency = defaultdict(list)
         for seq in sequences:
-            adjacency[seq['trigger_action']].append({
-                'next': seq['next_action'],
-                'count': seq['count'],
-                'gap': seq['avg_gap_seconds'] or 0,
-                'project': seq['project']
-            })
+            adjacency[seq["trigger_action"]].append(
+                {
+                    "next": seq["next_action"],
+                    "count": seq["count"],
+                    "gap": seq["avg_gap_seconds"] or 0,
+                    "project": seq["project"],
+                }
+            )
 
         # Find all triggers and next actions
-        all_triggers = set(s['trigger_action'] for s in sequences)
+        all_triggers = set(s["trigger_action"] for s in sequences)
 
         # Prefer starting points that begin chains (triggers not often reached from elsewhere)
-        start_candidates = sorted(all_triggers, key=lambda t: sum(
-            1 for s in sequences if s['next_action'] == t
-        ))
+        start_candidates = sorted(
+            all_triggers, key=lambda t: sum(1 for s in sequences if s["next_action"] == t)
+        )
 
         chains = []
         seen_chain_keys = set()
 
         for start in start_candidates:
             # DFS to find chains
-            stack = [(start, [start], 0, float('inf'))]
+            stack = [(start, [start], 0, float("inf"))]
 
             while stack:
                 current, path, total_gap, min_freq = stack.pop()
 
                 if len(path) >= max_chain_length:
-                    chain_key = '|'.join(path)
+                    chain_key = "|".join(path)
                     if chain_key not in seen_chain_keys and len(path) >= 3:
                         seen_chain_keys.add(chain_key)
-                        chains.append({
-                            'steps': list(path),
-                            'length': len(path),
-                            'min_frequency': min_freq,
-                            'total_gap_seconds': total_gap
-                        })
+                        chains.append(
+                            {
+                                "steps": list(path),
+                                "length": len(path),
+                                "min_frequency": min_freq,
+                                "total_gap_seconds": total_gap,
+                            }
+                        )
                     continue
 
                 next_actions = adjacency.get(current, [])
                 extended = False
 
-                for na in sorted(next_actions, key=lambda x: x['count'], reverse=True)[:3]:
-                    next_node = na['next']
+                for na in sorted(next_actions, key=lambda x: x["count"], reverse=True)[:3]:
+                    next_node = na["next"]
                     if next_node not in path:
-                        new_min = min(min_freq, na['count'])
-                        stack.append((
-                            next_node,
-                            path + [next_node],
-                            total_gap + na['gap'],
-                            new_min
-                        ))
+                        new_min = min(min_freq, na["count"])
+                        stack.append(
+                            (next_node, path + [next_node], total_gap + na["gap"], new_min)
+                        )
                         extended = True
 
                 if not extended and len(path) >= 3:
-                    chain_key = '|'.join(path)
+                    chain_key = "|".join(path)
                     if chain_key not in seen_chain_keys:
                         seen_chain_keys.add(chain_key)
-                        chains.append({
-                            'steps': list(path),
-                            'length': len(path),
-                            'min_frequency': min_freq,
-                            'total_gap_seconds': total_gap
-                        })
+                        chains.append(
+                            {
+                                "steps": list(path),
+                                "length": len(path),
+                                "min_frequency": min_freq,
+                                "total_gap_seconds": total_gap,
+                            }
+                        )
 
         # Score by length * frequency, deduplicate subsets
-        chains.sort(key=lambda c: c['length'] * c['min_frequency'], reverse=True)
+        chains.sort(key=lambda c: c["length"] * c["min_frequency"], reverse=True)
 
         final_chains = []
         for chain in chains:
-            steps_str = '|'.join(chain['steps'])
-            is_subset = any(steps_str in '|'.join(e['steps']) for e in final_chains)
+            steps_str = "|".join(chain["steps"])
+            is_subset = any(steps_str in "|".join(e["steps"]) for e in final_chains)
             if not is_subset:
                 final_chains.append(chain)
 
@@ -487,48 +533,52 @@ class PatternAnalyzer:
             "total_unique_sequences": total_sequences,
             "frequent_sequence_count": len(frequent_pairs),
             "workflow_candidates": [],
-            "frequent_transitions": []
+            "frequent_transitions": [],
         }
 
         # Format chains as workflow candidates
         for i, chain in enumerate(chains):
             steps_readable = []
-            for s in chain['steps']:
-                parts = s.split(':', 1)
+            for s in chain["steps"]:
+                parts = s.split(":", 1)
                 steps_readable.append(parts[1] if len(parts) > 1 else s)
 
-            name = ' -> '.join(steps_readable[:5])
+            name = " -> ".join(steps_readable[:5])
             if len(steps_readable) > 5:
-                name += f' ... ({len(steps_readable)} steps)'
+                name += f" ... ({len(steps_readable)} steps)"
 
-            output['workflow_candidates'].append({
-                'id': f'wf_candidate_{i+1}',
-                'name': name,
-                'steps': chain['steps'],
-                'steps_readable': steps_readable,
-                'step_count': chain['length'],
-                'frequency': chain['min_frequency'],
-                'avg_duration_seconds': round(chain['total_gap_seconds'], 1),
-                'status': 'candidate',
-                'discovered_at': datetime.now().isoformat()
-            })
+            output["workflow_candidates"].append(
+                {
+                    "id": f"wf_candidate_{i + 1}",
+                    "name": name,
+                    "steps": chain["steps"],
+                    "steps_readable": steps_readable,
+                    "step_count": chain["length"],
+                    "frequency": chain["min_frequency"],
+                    "avg_duration_seconds": round(chain["total_gap_seconds"], 1),
+                    "status": "candidate",
+                    "discovered_at": datetime.now().isoformat(),
+                }
+            )
 
         # Add frequent pairs
         for pair in frequent_pairs[:30]:
-            t_parts = pair['trigger_action'].split(':', 1)
-            n_parts = pair['next_action'].split(':', 1)
-            output['frequent_transitions'].append({
-                'from': pair['trigger_action'],
-                'to': pair['next_action'],
-                'from_readable': t_parts[1] if len(t_parts) > 1 else t_parts[0],
-                'to_readable': n_parts[1] if len(n_parts) > 1 else n_parts[0],
-                'count': pair['count'],
-                'avg_gap_seconds': round(pair['avg_gap_seconds'] or 0, 1)
-            })
+            t_parts = pair["trigger_action"].split(":", 1)
+            n_parts = pair["next_action"].split(":", 1)
+            output["frequent_transitions"].append(
+                {
+                    "from": pair["trigger_action"],
+                    "to": pair["next_action"],
+                    "from_readable": t_parts[1] if len(t_parts) > 1 else t_parts[0],
+                    "to_readable": n_parts[1] if len(n_parts) > 1 else n_parts[0],
+                    "count": pair["count"],
+                    "avg_gap_seconds": round(pair["avg_gap_seconds"] or 0, 1),
+                }
+            )
 
         # Atomic write
-        temp_file = self.PATTERNS_FILE.with_suffix('.tmp')
-        with open(temp_file, 'w') as f:
+        temp_file = self.PATTERNS_FILE.with_suffix(".tmp")
+        with open(temp_file, "w") as f:
             json.dump(output, f, indent=2)
         temp_file.replace(self.PATTERNS_FILE)
 
@@ -555,18 +605,15 @@ class AutoFixer:
                 {
                     "label": f"Open {app_b_project} in App A",
                     "action": "open_project",
-                    "params": {"project": app_b_project, "target": "app_a"}
+                    "params": {"project": app_b_project, "target": "app_a"},
                 },
                 {
                     "label": f"Open {app_a_project} in App B",
                     "action": "open_project",
-                    "params": {"project": app_a_project, "target": "app_b"}
+                    "params": {"project": app_a_project, "target": "app_b"},
                 },
-                {
-                    "label": "Keep working (ignore mismatch)",
-                    "action": "ignore"
-                }
-            ]
+                {"label": "Keep working (ignore mismatch)", "action": "ignore"},
+            ],
         }
 
     def _fix_missing_file(self, context: Dict) -> Dict:
@@ -579,13 +626,10 @@ class AutoFixer:
                 {
                     "label": "Search for similar files",
                     "action": "search_files",
-                    "params": {"query": missing}
+                    "params": {"query": missing},
                 },
-                {
-                    "label": "Ignore",
-                    "action": "ignore"
-                }
-            ]
+                {"label": "Ignore", "action": "ignore"},
+            ],
         }
 
     def suggest_fix(self, issue_type: str, context: Dict) -> Optional[Dict]:
@@ -600,13 +644,15 @@ class AutoFixer:
             "action": action,
             "params": params,
             "status": "ready_to_execute",
-            "command": self._generate_command(action, params)
+            "command": self._generate_command(action, params),
         }
 
     def _generate_command(self, action: str, params: Dict) -> str:
         """Generate the actual command to execute."""
         if action == "open_project":
-            return f"open_project(project='{params.get('project')}', target='{params.get('target')}')"
+            return (
+                f"open_project(project='{params.get('project')}', target='{params.get('target')}')"
+            )
         elif action == "search_files":
             return f"search_files(query='{params.get('query')}')"
         return f"# Action: {action}"
@@ -634,16 +680,21 @@ def main():
     fixer = AutoFixer()
 
     if len(sys.argv) < 2:
-        print(json.dumps({
-            "commands": [
-                "record <source> <json_data>",
-                "predict [action]",
-                "history [limit]",
-                "fix <issue_type> <context_json>",
-                "analyze [min_count]",
-                "backfill",
-            ]
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "commands": [
+                        "record <source> <json_data>",
+                        "predict [action]",
+                        "history [limit]",
+                        "fix <issue_type> <context_json>",
+                        "analyze [min_count]",
+                        "backfill",
+                    ]
+                },
+                indent=2,
+            )
+        )
         return
 
     cmd = sys.argv[1]
@@ -675,12 +726,17 @@ def main():
         min_count = int(sys.argv[2]) if len(sys.argv) > 2 else 3
         analyzer = PatternAnalyzer()
         result = analyzer.analyze_and_export(min_count)
-        print(json.dumps({
-            "candidates": len(result.get("workflow_candidates", [])),
-            "transitions": len(result.get("frequent_transitions", [])),
-            "total_actions": result.get("total_actions_recorded", 0),
-            "exported_to": str(PatternAnalyzer.PATTERNS_FILE)
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "candidates": len(result.get("workflow_candidates", [])),
+                    "transitions": len(result.get("frequent_transitions", [])),
+                    "total_actions": result.get("total_actions_recorded", 0),
+                    "exported_to": str(PatternAnalyzer.PATTERNS_FILE),
+                },
+                indent=2,
+            )
+        )
 
     elif cmd == "backfill":
         # Backfill from events.ndjson into workflows.db using batched SQL
@@ -692,7 +748,7 @@ def main():
         # Parse all events first
         parsed_events = []
         errors = 0
-        with open(events_file, 'r') as f:
+        with open(events_file, "r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -719,12 +775,14 @@ def main():
                     else:
                         continue
 
-                    parsed_events.append({
-                        "ts": ts,
-                        "action_type": action_type,
-                        "details": json.dumps({"name": app_name, "title": window_title}),
-                        "project": project
-                    })
+                    parsed_events.append(
+                        {
+                            "ts": ts,
+                            "action_type": action_type,
+                            "details": json.dumps({"name": app_name, "title": window_title}),
+                            "project": project,
+                        }
+                    )
                 except Exception:
                     errors += 1
 
@@ -733,15 +791,18 @@ def main():
         cursor = conn.cursor()
 
         # Insert all actions in one transaction
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO actions (timestamp, action_type, details, project, context, session_id)
             VALUES (:ts, :action_type, :details, :project, NULL, 'backfill')
-        """, parsed_events)
+        """,
+            parsed_events,
+        )
 
         # Learn sequences from consecutive events
         seq_count = 0
         for i in range(1, len(parsed_events)):
-            prev = parsed_events[i-1]
+            prev = parsed_events[i - 1]
             curr = parsed_events[i]
 
             # Calculate gap
@@ -760,24 +821,33 @@ def main():
             project = curr["project"]
 
             # Upsert sequence
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, count, avg_gap_seconds FROM sequences
                 WHERE trigger_action = ? AND next_action = ?
-            """, (trigger, next_act))
+            """,
+                (trigger, next_act),
+            )
             row = cursor.fetchone()
 
             if row:
                 new_count = row[1] + 1
                 new_avg = ((row[2] * row[1]) + gap) / new_count
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE sequences SET count = ?, avg_gap_seconds = ?, last_seen = ?
                     WHERE id = ?
-                """, (new_count, new_avg, curr["ts"], row[0]))
+                """,
+                    (new_count, new_avg, curr["ts"], row[0]),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO sequences (trigger_action, next_action, count, avg_gap_seconds, project, last_seen)
                     VALUES (?, ?, 1, ?, ?, ?)
-                """, (trigger, next_act, gap, project, curr["ts"]))
+                """,
+                    (trigger, next_act, gap, project, curr["ts"]),
+                )
             seq_count += 1
 
         conn.commit()
@@ -787,13 +857,18 @@ def main():
         analyzer = PatternAnalyzer()
         result = analyzer.analyze_and_export(min_count=3)
 
-        print(json.dumps({
-            "backfilled": len(parsed_events),
-            "sequences_learned": seq_count,
-            "errors": errors,
-            "candidates_found": len(result.get("workflow_candidates", [])),
-            "transitions_found": len(result.get("frequent_transitions", []))
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "backfilled": len(parsed_events),
+                    "sequences_learned": seq_count,
+                    "errors": errors,
+                    "candidates_found": len(result.get("workflow_candidates", [])),
+                    "transitions_found": len(result.get("frequent_transitions", [])),
+                },
+                indent=2,
+            )
+        )
 
     else:
         print(f'{{"error": "Unknown command: {cmd}"}}')

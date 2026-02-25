@@ -25,10 +25,9 @@ from typing import Dict, List
 logger = logging.getLogger("email_monitor")
 
 # Configurable via environment
-ALERTS_FILE = Path(os.getenv(
-    "PROACTIVE_ALERTS_FILE",
-    str(Path(__file__).parent / "email_alerts.json")
-))
+ALERTS_FILE = Path(
+    os.getenv("PROACTIVE_ALERTS_FILE", str(Path(__file__).parent / "email_alerts.json"))
+)
 
 # Priority domains and addresses (configurable via env vars)
 _domains_env = os.getenv("PROACTIVE_PRIORITY_DOMAINS", "")
@@ -136,6 +135,7 @@ class EmailMonitor:
 
         try:
             from notify_channels import notify_all
+
             notify_all(message, voice=True)
         except ImportError:
             print(f"PRIORITY EMAIL: {message}")
@@ -153,6 +153,7 @@ class EmailMonitor:
 
         try:
             from notify_channels import notify_telegram_only
+
             notify_telegram_only(message)
         except ImportError:
             print(f"EMAIL ALERT: {message}")
@@ -163,6 +164,7 @@ class EmailMonitor:
 if __name__ == "__main__":
     # Manual test
     from tracker_state import TrackerState
+
     logging.basicConfig(level=logging.INFO)
 
     state = TrackerState()

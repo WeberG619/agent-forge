@@ -31,7 +31,7 @@ LOG_FILE = str(BASE_DIR / "logs" / "agent.log")
 
 def save_pid():
     """Save current PID to file."""
-    with open(PID_FILE, 'w') as f:
+    with open(PID_FILE, "w") as f:
         f.write(str(os.getpid()))
 
 
@@ -146,13 +146,13 @@ def run_daemon():
     sys.stdout.flush()
     sys.stderr.flush()
 
-    with open('/dev/null', 'r') as devnull:
+    with open("/dev/null", "r") as devnull:
         os.dup2(devnull.fileno(), sys.stdin.fileno())
 
     # Ensure log directory exists
     Path(LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
 
-    log_fd = open(LOG_FILE, 'a')
+    log_fd = open(LOG_FILE, "a")
     os.dup2(log_fd.fileno(), sys.stdout.fileno())
     os.dup2(log_fd.fileno(), sys.stderr.fileno())
 

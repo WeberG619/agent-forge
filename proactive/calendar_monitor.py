@@ -41,6 +41,7 @@ class CalendarMonitor:
         """Refresh today's events from the calendar API."""
         try:
             from calendar_client import get_today_events
+
             raw_events = get_today_events()
 
             self._cached_events = []
@@ -58,13 +59,15 @@ class CalendarMonitor:
                 else:
                     start_dt = start_dt.astimezone(LOCAL_TZ)
 
-                self._cached_events.append({
-                    "id": event.get("id", ""),
-                    "summary": event.get("summary", "(No title)"),
-                    "start_dt": start_dt,
-                    "location": event.get("location", ""),
-                    "start_raw": start_raw,
-                })
+                self._cached_events.append(
+                    {
+                        "id": event.get("id", ""),
+                        "summary": event.get("summary", "(No title)"),
+                        "start_dt": start_dt,
+                        "location": event.get("location", ""),
+                        "start_raw": start_raw,
+                    }
+                )
 
             self._last_cache_refresh = datetime.now(LOCAL_TZ)
             logger.info(f"Calendar cache refreshed: {len(self._cached_events)} timed events today")
@@ -128,6 +131,7 @@ class CalendarMonitor:
 
         try:
             from notify_channels import notify_all
+
             notify_all(message, voice=True)
         except ImportError:
             print(f"REMINDER: {message}")
@@ -138,6 +142,7 @@ class CalendarMonitor:
 if __name__ == "__main__":
     # Manual test
     from tracker_state import TrackerState
+
     logging.basicConfig(level=logging.INFO)
 
     state = TrackerState()
@@ -147,7 +152,7 @@ if __name__ == "__main__":
     print(f"Cached events: {len(monitor._cached_events)}")
     for ev in monitor._cached_events:
         now = datetime.now(LOCAL_TZ)
-        delta = (ev['start_dt'] - now).total_seconds() / 60
+        delta = (ev["start_dt"] - now).total_seconds() / 60
         print(f"  {ev['summary']} at {ev['start_dt'].strftime('%I:%M %p')} ({int(delta)} min away)")
     state.save()
     print("Done.")

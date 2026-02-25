@@ -28,7 +28,7 @@ EXECUTION_LOG = BASE_DIR / "logs" / "executions.log"
 
 # PARALLEL EXECUTION SETTINGS
 MAX_PARALLEL_TASKS = 3  # Run up to 3 tasks simultaneously
-TASK_TIMEOUT = 1800     # 30 minutes per task
+TASK_TIMEOUT = 1800  # 30 minutes per task
 
 # Ensure directories exist
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -37,6 +37,7 @@ EXECUTION_LOG.parent.mkdir(parents=True, exist_ok=True)
 # ============================================
 # TASK EXECUTOR CLASS
 # ============================================
+
 
 class TaskExecutor:
     """Executes tasks from the queue via Claude Code CLI with parallel support."""
@@ -75,13 +76,16 @@ class TaskExecutor:
                 # Get highest priority pending tasks, excluding any already running
                 running_ids = tuple(self.current_tasks) if self.current_tasks else (0,)
 
-                cur.execute(f"""
+                cur.execute(
+                    f"""
                     SELECT * FROM tasks
                     WHERE status = 'pending'
-                    AND id NOT IN ({','.join('?' * len(running_ids))})
+                    AND id NOT IN ({",".join("?" * len(running_ids))})
                     ORDER BY priority DESC, created_at ASC
                     LIMIT ?
-                """, (*running_ids, limit))
+                """,
+                    (*running_ids, limit),
+                )
 
                 rows = cur.fetchall()
                 conn.close()
@@ -100,16 +104,21 @@ class TaskExecutor:
                 cur = conn.cursor()
 
                 now = datetime.now().isoformat()
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE tasks
                     SET status = 'in_progress', started_at = ?
                     WHERE id = ?
-                """, (now, task_id))
+                """,
+                    (now, task_id),
+                )
 
                 conn.commit()
                 conn.close()
                 self.current_tasks.add(task_id)
-                logger.info(f"Task #{task_id} marked as in_progress (active: {len(self.current_tasks)})")
+                logger.info(
+                    f"Task #{task_id} marked as in_progress (active: {len(self.current_tasks)})"
+                )
 
             except Exception as e:
                 logger.error(f"Error marking task started: {e}")
@@ -122,18 +131,23 @@ class TaskExecutor:
                 cur = conn.cursor()
 
                 now = datetime.now().isoformat()
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE tasks
                     SET status = 'completed',
                         completed_at = ?,
                         result = ?
                     WHERE id = ?
-                """, (now, result, task_id))
+                """,
+                    (now, result, task_id),
+                )
 
                 conn.commit()
                 conn.close()
                 self.current_tasks.discard(task_id)
-                logger.info(f"Task #{task_id} completed in {execution_time:.1f}s (active: {len(self.current_tasks)})")
+                logger.info(
+                    f"Task #{task_id} completed in {execution_time:.1f}s (active: {len(self.current_tasks)})"
+                )
 
             except Exception as e:
                 logger.error(f"Error marking task completed: {e}")
@@ -146,18 +160,23 @@ class TaskExecutor:
                 cur = conn.cursor()
 
                 now = datetime.now().isoformat()
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE tasks
                     SET status = 'failed',
                         completed_at = ?,
                         error = ?
                     WHERE id = ?
-                """, (now, error, task_id))
+                """,
+                    (now, error, task_id),
+                )
 
                 conn.commit()
                 conn.close()
                 self.current_tasks.discard(task_id)
-                logger.error(f"Task #{task_id} failed after {execution_time:.1f}s: {error} (active: {len(self.current_tasks)})")
+                logger.error(
+                    f"Task #{task_id} failed after {execution_time:.1f}s: {error} (active: {len(self.current_tasks)})"
+                )
 
             except Exception as e:
                 logger.error(f"Error marking task failed: {e}")
@@ -169,14 +188,14 @@ class TaskExecutor:
         prompt = task["prompt"]
 
         logger.info(f"Starting task #{task_id}: {title}")
-        self.log_execution(f"START: #{task_id} - {title} (parallel workers: {self.active_count + 1}/{self.max_workers})")
+        self.log_execution(
+            f"START: #{task_id} - {title} (parallel workers: {self.active_count + 1}/{self.max_workers})"
+        )
 
         # Notify start
         if self.notifier:
             await self.notifier.send(
-                f"Task Starting: #{task_id}",
-                f"{title}\n\nExecuting via Claude Code...",
-                "medium"
+                f"Task Starting: #{task_id}", f"{title}\n\nExecuting via Claude Code...", "medium"
             )
 
         # Mark as started
@@ -190,8 +209,10 @@ class TaskExecutor:
             execution_time = (datetime.now() - start_time).total_seconds()
 
             # Save full result to file
-            result_file = RESULTS_DIR / f"task_{task_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-            result_file.write_text(f"Task #{task_id}: {title}\n{'='*60}\n\n{result}")
+            result_file = (
+                RESULTS_DIR / f"task_{task_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            )
+            result_file.write_text(f"Task #{task_id}: {title}\n{'=' * 60}\n\n{result}")
 
             # Mark completed
             self.mark_completed(task_id, result, execution_time)
@@ -203,7 +224,7 @@ class TaskExecutor:
                 await self.notifier.send(
                     f"Task Complete: #{task_id}",
                     f"{title}\n\nDuration: {execution_time:.1f}s\n\n{summary}",
-                    "high"
+                    "high",
                 )
 
             self.execution_count += 1
@@ -218,9 +239,7 @@ class TaskExecutor:
 
             if self.notifier:
                 await self.notifier.send(
-                    f"Task Timeout: #{task_id}",
-                    f"{title}\n\n{error_msg}",
-                    "high"
+                    f"Task Timeout: #{task_id}", f"{title}\n\n{error_msg}", "high"
                 )
 
             return False
@@ -234,9 +253,7 @@ class TaskExecutor:
 
             if self.notifier:
                 await self.notifier.send(
-                    f"Task Failed: #{task_id}",
-                    f"{title}\n\nError: {error_msg}",
-                    "high"
+                    f"Task Failed: #{task_id}", f"{title}\n\nError: {error_msg}", "high"
                 )
 
             return False
@@ -249,18 +266,17 @@ class TaskExecutor:
             prompt_file.write_text(prompt)
 
             proc = await asyncio.create_subprocess_exec(
-                'claude',
-                '-p', prompt,
-                '--output-format', 'text',
-                '--dangerously-skip-permissions',
+                "claude",
+                "-p",
+                prompt,
+                "--output-format",
+                "text",
+                "--dangerously-skip-permissions",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=timeout
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
 
             output = stdout.decode().strip()
 
@@ -305,12 +321,13 @@ class TaskExecutor:
 
                     if tasks:
                         # Launch tasks in parallel
-                        logger.info(f"Launching {len(tasks)} task(s) in parallel (slots: {available_slots})")
+                        logger.info(
+                            f"Launching {len(tasks)} task(s) in parallel (slots: {available_slots})"
+                        )
 
                         for task in tasks:
                             asyncio.create_task(
-                                self._execute_with_logging(task),
-                                name=f"task-{task['id']}"
+                                self._execute_with_logging(task), name=f"task-{task['id']}"
                             )
 
                 # Wait before checking for more tasks
@@ -322,7 +339,7 @@ class TaskExecutor:
 
     async def _execute_with_logging(self, task: Dict):
         """Wrapper to execute task and log completion."""
-        task_id = task['id']
+        task_id = task["id"]
         try:
             result = await self.execute_task(task)
             logger.info(f"Task #{task_id} execution finished (success: {result})")
@@ -362,19 +379,22 @@ class TaskExecutor:
 # STANDALONE EXECUTION
 # ============================================
 
+
 async def main():
     """Run the task executor as a standalone process."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Parallel Task Executor")
-    parser.add_argument("-w", "--workers", type=int, default=MAX_PARALLEL_TASKS,
-                        help=f"Number of parallel workers (default: {MAX_PARALLEL_TASKS})")
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        default=MAX_PARALLEL_TASKS,
+        help=f"Number of parallel workers (default: {MAX_PARALLEL_TASKS})",
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s [%(levelname)s] %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
     executor = TaskExecutor(max_workers=args.workers)
 

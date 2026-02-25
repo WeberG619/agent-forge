@@ -33,8 +33,7 @@ from typing import Any, Dict, List, Optional, Tuple
 IS_MACOS = platform.system() == "Darwin"
 
 _NOT_MACOS_MSG = (
-    "macos_automation: this function requires macOS. "
-    f"Current platform: {platform.system()}"
+    f"macos_automation: this function requires macOS. Current platform: {platform.system()}"
 )
 
 
@@ -46,6 +45,7 @@ def _assert_macos() -> None:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _run(cmd: List[str], timeout: int = 10) -> Tuple[str, str, int]:
     """Run a command and return (stdout, stderr, returncode)."""
@@ -76,6 +76,7 @@ def _jxa(script: str, timeout: int = 10) -> Tuple[str, str, int]:
 # ---------------------------------------------------------------------------
 # Application management
 # ---------------------------------------------------------------------------
+
 
 def activate_application(app_name: str) -> bool:
     """
@@ -142,6 +143,7 @@ def quit_application(app_name: str) -> bool:
 # ---------------------------------------------------------------------------
 # Window geometry
 # ---------------------------------------------------------------------------
+
 
 def get_window_info(app_name: str) -> Optional[Dict[str, Any]]:
     """
@@ -226,9 +228,7 @@ end tell
     return rc == 0
 
 
-def move_and_resize_window(
-    app_name: str, x: int, y: int, width: int, height: int
-) -> bool:
+def move_and_resize_window(app_name: str, x: int, y: int, width: int, height: int) -> bool:
     """
     Move and resize in a single AppleScript call (fewer round-trips).
 
@@ -250,6 +250,7 @@ end tell
 # ---------------------------------------------------------------------------
 # Screenshots
 # ---------------------------------------------------------------------------
+
 
 def take_screenshot(
     output_path: Optional[str] = None,
@@ -274,9 +275,7 @@ def take_screenshot(
     _assert_macos()
 
     if output_path is None:
-        output_path = str(
-            Path(tempfile.mkdtemp()) / "cadre_screenshot.png"
-        )
+        output_path = str(Path(tempfile.mkdtemp()) / "cadre_screenshot.png")
 
     cmd: List[str] = ["screencapture", "-x"]  # -x = no sound
 
@@ -285,6 +284,7 @@ def take_screenshot(
             # Activate the target app first so its window is front
             activate_application(app_name)
             import time as _time
+
             _time.sleep(0.3)
         cmd += ["-l"]
         # For -l we need the window ID (CGWindowID) — get via JXA
@@ -400,9 +400,7 @@ end tell
 def excel_save_workbook() -> bool:
     """Save the active Excel workbook."""
     _assert_macos()
-    _, _, rc = _osascript(
-        'tell application "Microsoft Excel" to save active workbook'
-    )
+    _, _, rc = _osascript('tell application "Microsoft Excel" to save active workbook')
     return rc == 0
 
 
@@ -471,12 +469,8 @@ end tell
 # ---------------------------------------------------------------------------
 
 # macOS Chrome installs at a stable path regardless of architecture.
-CHROME_MACOS_PATH = (
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-)
-CHROME_CANARY_PATH = (
-    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
-)
+CHROME_MACOS_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME_CANARY_PATH = "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
 CDP_PORT = 9222
 _chrome_proc: Optional[subprocess.Popen] = None  # type: ignore[type-arg]
 
@@ -507,9 +501,7 @@ def launch_chrome_cdp(port: int = CDP_PORT, user_data_dir: Optional[str] = None)
 
     chrome = find_chrome_path()
     if not chrome:
-        raise RuntimeError(
-            "Google Chrome not found. Install it at /Applications/Google Chrome.app"
-        )
+        raise RuntimeError("Google Chrome not found. Install it at /Applications/Google Chrome.app")
 
     if user_data_dir is None:
         user_data_dir = str(Path(tempfile.mkdtemp()) / "cadre-chrome-profile")
@@ -585,9 +577,7 @@ def cdp_navigate(url: str, port: int = CDP_PORT) -> bool:
     # Use the existing tab's WebSocket debugger URL isn't accessible via
     # simple HTTP — instead, POST to /json/activate then use /json/new
     try:
-        activate_url = (
-            f"http://127.0.0.1:{port}/json/activate/{page_target['id']}"
-        )
+        activate_url = f"http://127.0.0.1:{port}/json/activate/{page_target['id']}"
         urllib.request.urlopen(activate_url, timeout=3)
     except urllib.error.URLError:
         pass
@@ -620,6 +610,7 @@ def cdp_get_page_url(port: int = CDP_PORT) -> Optional[str]:
 # ---------------------------------------------------------------------------
 # Keyboard / clipboard helpers
 # ---------------------------------------------------------------------------
+
 
 def type_text(text: str) -> bool:
     """
@@ -680,6 +671,7 @@ if __name__ == "__main__":
     try:
         # Try to get frontmost window — may fail without Accessibility perms
         from macos_bridge import get_open_applications
+
         apps = get_open_applications()
         print(f"Visible apps ({len(apps)}): {[a['ProcessName'] for a in apps[:5]]}")
     except Exception as exc:

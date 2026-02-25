@@ -30,20 +30,24 @@ IS_MACOS = platform.system() == "Darwin"
 
 def _require_macos(default: Any = None):
     """Decorator: return default immediately when not on macOS."""
+
     def decorator(fn):
         def wrapper(*args, **kwargs):
             if not IS_MACOS:
                 return default() if callable(default) else default
             return fn(*args, **kwargs)
+
         wrapper.__name__ = fn.__name__
         wrapper.__doc__ = fn.__doc__
         return wrapper
+
     return decorator
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _run(cmd: List[str], timeout: int = 5) -> Optional[str]:
     """Run a command and return stripped stdout, or None on failure."""
@@ -67,6 +71,7 @@ def _osascript(script: str, timeout: int = 5) -> Optional[str]:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 @_require_macos(default=list)
 def get_open_applications() -> List[Dict[str, str]]:
@@ -93,18 +98,17 @@ def get_open_applications() -> List[Dict[str, str]]:
                 m = re.search(r'name="([^"]+)"', line)
                 if m:
                     name = m.group(1)
-                    apps.append({
-                        "ProcessName": name,
-                        "MainWindowTitle": name,
-                    })
+                    apps.append(
+                        {
+                            "ProcessName": name,
+                            "MainWindowTitle": name,
+                        }
+                    )
             if apps:
                 return apps
 
     # Fallback: osascript (requires no special permissions for visible=true)
-    script = (
-        'tell application "System Events" '
-        'to get name of every process whose visible is true'
-    )
+    script = 'tell application "System Events" to get name of every process whose visible is true'
     output = _osascript(script)
     if output:
         names = [n.strip() for n in output.split(",") if n.strip()]
@@ -166,11 +170,13 @@ def get_screen_info() -> Dict[str, Any]:
             # "3840 x 2160 @ 60.00Hz"  or  "2560 x 1440"
             m = re.search(r"(\d+)\s*x\s*(\d+)", res_str)
             if m:
-                displays.append({
-                    "name": name,
-                    "width": int(m.group(1)),
-                    "height": int(m.group(2)),
-                })
+                displays.append(
+                    {
+                        "name": name,
+                        "width": int(m.group(1)),
+                        "height": int(m.group(2)),
+                    }
+                )
 
     primary = displays[0] if displays else {}
     return {
@@ -219,7 +225,7 @@ def get_system_info() -> Dict[str, Any]:
     mem_bytes = _run(["sysctl", "-n", "hw.memsize"])
     total_gb: Optional[float] = None
     if mem_bytes and mem_bytes.isdigit():
-        total_gb = int(mem_bytes) / (1024 ** 3)
+        total_gb = int(mem_bytes) / (1024**3)
         info["memory_total_gb"] = round(total_gb, 1)
 
     # --- Memory pressure via vm_stat ---
@@ -237,7 +243,7 @@ def get_system_info() -> Dict[str, Any]:
         free = _pages("Pages free")
         inactive = _pages("Pages inactive")
         # "used" = total - free - inactive (rough approximation)
-        free_gb = (free + inactive) * page_size / (1024 ** 3)
+        free_gb = (free + inactive) * page_size / (1024**3)
         used_gb = max(total_gb - free_gb, 0)
         info["memory_used_gb"] = round(used_gb, 1)
         info["memory_percent"] = int(min((used_gb / total_gb) * 100, 100))
@@ -285,6 +291,7 @@ end tell
 # ---------------------------------------------------------------------------
 # Convenience: single snapshot dict (mirrors daemon's state shape)
 # ---------------------------------------------------------------------------
+
 
 def snapshot() -> Dict[str, Any]:
     """

@@ -41,6 +41,7 @@ _SEEDS_CACHE = None  # In-memory cache of parsed seeds
 @dataclass
 class ActionCheck:
     """Result of checking an action against experience."""
+
     blocked: bool = False
     reason: str = ""
     warnings: list = field(default_factory=list)
@@ -118,7 +119,9 @@ class CommonSense:
 
         # Apply classification heuristics
         if classification["destructive"] and not corrections:
-            result.warnings.append("This looks destructive and has no prior experience. Confirm before proceeding.")
+            result.warnings.append(
+                "This looks destructive and has no prior experience. Confirm before proceeding."
+            )
             result.confidence = 0.5
 
         if classification["shared_state"]:
@@ -135,14 +138,32 @@ class CommonSense:
         action_lower = action.lower()
 
         destructive_signals = [
-            "delete", "remove", "drop", "truncate", "rm ", "rm -",
-            "overwrite", "force", "reset --hard", "clean -f",
-            "wipe", "destroy", "purge"
+            "delete",
+            "remove",
+            "drop",
+            "truncate",
+            "rm ",
+            "rm -",
+            "overwrite",
+            "force",
+            "reset --hard",
+            "clean -f",
+            "wipe",
+            "destroy",
+            "purge",
         ]
 
         shared_signals = [
-            "push", "deploy", "publish", "send", "email",
-            "post", "merge", "release", "broadcast", "notify"
+            "push",
+            "deploy",
+            "publish",
+            "send",
+            "email",
+            "post",
+            "merge",
+            "release",
+            "broadcast",
+            "notify",
         ]
 
         return {
@@ -162,9 +183,15 @@ class CommonSense:
 
     # ─── POST-ACTION LEARNING ──────────────────────────────────
 
-    def learn(self, action: str, what_went_wrong: str, correct_approach: str,
-              category: str = "execution", severity: str = "medium",
-              tags: Optional[list] = None):
+    def learn(
+        self,
+        action: str,
+        what_went_wrong: str,
+        correct_approach: str,
+        category: str = "execution",
+        severity: str = "medium",
+        tags: Optional[list] = None,
+    ):
         """
         Store a correction from a mistake or user feedback.
 
@@ -194,7 +221,9 @@ class CommonSense:
         if tags:
             all_tags.extend(tags)
 
-        self._store_memory(content, tags=all_tags, importance=self._severity_to_importance(severity))
+        self._store_memory(
+            content, tags=all_tags, importance=self._severity_to_importance(severity)
+        )
 
         return stored
 
@@ -202,9 +231,7 @@ class CommonSense:
         """Log that a known mistake was successfully avoided."""
         content = f"AVOIDED MISTAKE: {description}"
         self._store_memory(
-            content,
-            tags=["avoided-mistake", "common-sense", "positive"],
-            importance=5
+            content, tags=["avoided-mistake", "common-sense", "positive"], importance=5
         )
 
     def succeeded(self, action: str, context: str = ""):
@@ -212,11 +239,7 @@ class CommonSense:
         content = f"KNOWN GOOD: {action}"
         if context:
             content += f"\nContext: {context}"
-        self._store_memory(
-            content,
-            tags=["known-good", "common-sense", "positive"],
-            importance=4
-        )
+        self._store_memory(content, tags=["known-good", "common-sense", "positive"], importance=4)
 
     # ─── SEED MANAGEMENT ───────────────────────────────────────
 
@@ -280,7 +303,16 @@ class CommonSense:
         domains = {}
         for c in corrections:
             content = c.get("content", "")
-            for domain in ["filesystem", "git", "network", "execution", "scope", "deployment", "data", "identity"]:
+            for domain in [
+                "filesystem",
+                "git",
+                "network",
+                "execution",
+                "scope",
+                "deployment",
+                "data",
+                "identity",
+            ]:
                 if domain in content.lower():
                     domains.setdefault(domain, []).append(content)
                     break
@@ -288,12 +320,14 @@ class CommonSense:
         patterns = []
         for domain, items in domains.items():
             if len(items) >= 2:
-                patterns.append({
-                    "domain": domain,
-                    "count": len(items),
-                    "insight": f"Recurring issues in {domain} ({len(items)} corrections). Review and consider adding a pre-check.",
-                    "items": items[:5]  # Cap for readability
-                })
+                patterns.append(
+                    {
+                        "domain": domain,
+                        "count": len(items),
+                        "insight": f"Recurring issues in {domain} ({len(items)} corrections). Review and consider adding a pre-check.",
+                        "items": items[:5],  # Cap for readability
+                    }
+                )
 
         return sorted(patterns, key=lambda p: p["count"], reverse=True)
 
@@ -350,17 +384,22 @@ class CommonSense:
             detection_words = set(detection.replace(",", " ").replace("/", " ").split())
             overlap = action_words & detection_words
             # Also check for substring matches (phrases like "rm -rf")
-            phrase_match = any(phrase.strip() in action_lower
-                              for phrase in detection.split(",") if len(phrase.strip()) > 2)
+            phrase_match = any(
+                phrase.strip() in action_lower
+                for phrase in detection.split(",")
+                if len(phrase.strip()) > 2
+            )
 
             if len(overlap) >= 2 or phrase_match:
-                matches.append({
-                    "id": seed["id"],
-                    "content": f"SEED: {seed['what_went_wrong']}",
-                    "correct_approach": seed["correct_approach"],
-                    "severity": seed.get("severity", "medium"),
-                    "domain": seed.get("domain", "general"),
-                })
+                matches.append(
+                    {
+                        "id": seed["id"],
+                        "content": f"SEED: {seed['what_went_wrong']}",
+                        "correct_approach": seed["correct_approach"],
+                        "severity": seed.get("severity", "medium"),
+                        "domain": seed.get("domain", "general"),
+                    }
+                )
 
         return matches
 
@@ -373,7 +412,22 @@ class CommonSense:
             return self._search_mcp(query, memory_type)
 
         # Extract meaningful keywords (skip short/common words)
-        stop_words = {"a", "an", "the", "to", "in", "on", "at", "is", "it", "of", "and", "or", "all", "for"}
+        stop_words = {
+            "a",
+            "an",
+            "the",
+            "to",
+            "in",
+            "on",
+            "at",
+            "is",
+            "it",
+            "of",
+            "and",
+            "or",
+            "all",
+            "for",
+        }
         keywords = [w for w in query.lower().split() if len(w) > 2 and w not in stop_words]
 
         if not keywords:
@@ -381,6 +435,7 @@ class CommonSense:
 
         try:
             import sqlite3
+
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
 
@@ -417,6 +472,7 @@ class CommonSense:
         """Direct SQLite search when DB path is known."""
         try:
             import sqlite3
+
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
 
@@ -457,11 +513,12 @@ class CommonSense:
         """Store directly to SQLite."""
         try:
             import sqlite3
+
             conn = sqlite3.connect(self.db_path)
             conn.execute(
                 """INSERT INTO memories (content, tags, importance, project, memory_type, created_at)
                    VALUES (?, ?, ?, ?, 'correction', datetime('now'))""",
-                (content, json.dumps(tags or []), importance, self.project)
+                (content, json.dumps(tags or []), importance, self.project),
             )
             conn.commit()
             conn.close()
@@ -481,9 +538,7 @@ class CommonSense:
             f"Category: {correction.get('category', 'general')}"
         )
         self._store_memory(
-            content,
-            tags=["correction", correction.get("category", "general")],
-            importance=8
+            content, tags=["correction", correction.get("category", "general")], importance=8
         )
         return True
 
@@ -494,12 +549,17 @@ class CommonSense:
 
 # ─── STANDALONE SEEDING ─────────────────────────────────────────
 
+
 def main():
     """CLI entry point for seeding and synthesis."""
     import argparse
+
     parser = argparse.ArgumentParser(description="Common Sense Engine")
-    parser.add_argument("command", choices=["seed", "synthesize", "check"],
-                        help="seed: load universal corrections, synthesize: find patterns, check: test an action")
+    parser.add_argument(
+        "command",
+        choices=["seed", "synthesize", "check"],
+        help="seed: load universal corrections, synthesize: find patterns, check: test an action",
+    )
     parser.add_argument("--project", default="general", help="Project context")
     parser.add_argument("--action", help="Action to check (for 'check' command)")
     parser.add_argument("--db", help="Path to memory SQLite database")

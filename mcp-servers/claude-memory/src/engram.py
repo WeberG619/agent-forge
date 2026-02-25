@@ -28,25 +28,26 @@ from typing import Any, Dict, List, Optional, Tuple
 # CONFIGURATION
 # ============================================================================
 
+
 @dataclass
 class EngramConfig:
     """Configuration for Engram memory enhancements."""
 
     # Hash cache settings
-    hash_cache_max_size: int = 10000          # Max entries in hash cache
-    hash_cache_ttl_seconds: int = 3600        # Time-to-live for cache entries (1 hour)
+    hash_cache_max_size: int = 10000  # Max entries in hash cache
+    hash_cache_ttl_seconds: int = 3600  # Time-to-live for cache entries (1 hour)
 
     # Hot cache settings
-    hot_cache_min_importance: int = 9         # Minimum importance for hot cache
-    hot_cache_refresh_interval: int = 300     # Refresh hot cache every 5 minutes
+    hot_cache_min_importance: int = 9  # Minimum importance for hot cache
+    hot_cache_refresh_interval: int = 300  # Refresh hot cache every 5 minutes
 
     # Gating settings
-    gating_threshold: float = 0.3             # Minimum relevance score to pass gate
-    gating_decay_factor: float = 0.95         # Decay for older memories
+    gating_threshold: float = 0.3  # Minimum relevance score to pass gate
+    gating_decay_factor: float = 0.95  # Decay for older memories
 
     # Memory allocation (Engram's 75/25 split)
-    max_context_tokens: int = 8000            # Max tokens for memory injection
-    memory_allocation_ratio: float = 0.25     # 25% of context for memories
+    max_context_tokens: int = 8000  # Max tokens for memory injection
+    memory_allocation_ratio: float = 0.25  # 25% of context for memories
 
     # N-gram settings for hashing
     ngram_sizes: Tuple[int, ...] = (2, 3, 4)  # N-gram sizes for hash keys
@@ -56,6 +57,7 @@ class EngramConfig:
 # TOKENIZER COMPRESSION (Engram-style vocabulary reduction)
 # ============================================================================
 
+
 class TokenizerCompressor:
     """
     Compresses and normalizes text for consistent hashing.
@@ -64,26 +66,46 @@ class TokenizerCompressor:
 
     # Common synonyms in the codebase context
     SYNONYMS = {
-        'revit': ['revit', 'autodesk revit', 'rvt', 'autodesk'],
-        'wall': ['wall', 'walls', 'partition', 'partitions'],
-        'create': ['create', 'make', 'build', 'generate', 'add', 'creation', 'creating', 'making', 'building'],
-        'delete': ['delete', 'remove', 'destroy', 'drop', 'deletion', 'removing'],
-        'error': ['error', 'bug', 'issue', 'problem', 'failure', 'errors', 'bugs', 'issues', 'problems'],
-        'fix': ['fix', 'repair', 'resolve', 'correct', 'patch', 'fixing', 'fixed', 'correction'],
-        'mcp': ['mcp', 'model context protocol', 'mcp server', 'mcpbridge'],
-        'api': ['api', 'endpoint', 'method', 'function', 'methods', 'endpoints'],
-        'memory': ['memory', 'memories', 'recall', 'remember', 'store', 'storage'],
-        'view': ['view', 'views', 'viewport', 'viewports', 'sheet', 'sheets'],
-        'floor': ['floor', 'level', 'story', 'floors', 'levels', 'stories'],
-        'door': ['door', 'doors', 'opening', 'openings', 'doorway'],
-        'window': ['window', 'windows', 'glazing'],
-        'room': ['room', 'rooms', 'space', 'spaces', 'area', 'areas'],
-        'project': ['project', 'projects', 'model', 'models', 'file', 'files'],
-        'element': ['element', 'elements', 'object', 'objects', 'component', 'components'],
-        'place': ['place', 'placement', 'placing', 'position', 'positioning', 'locate'],
-        'get': ['get', 'retrieve', 'fetch', 'obtain', 'query', 'find', 'search'],
-        'update': ['update', 'modify', 'change', 'edit', 'updating', 'modifying'],
-        'dimension': ['dimension', 'dimensions', 'dim', 'dims', 'measurement'],
+        "revit": ["revit", "autodesk revit", "rvt", "autodesk"],
+        "wall": ["wall", "walls", "partition", "partitions"],
+        "create": [
+            "create",
+            "make",
+            "build",
+            "generate",
+            "add",
+            "creation",
+            "creating",
+            "making",
+            "building",
+        ],
+        "delete": ["delete", "remove", "destroy", "drop", "deletion", "removing"],
+        "error": [
+            "error",
+            "bug",
+            "issue",
+            "problem",
+            "failure",
+            "errors",
+            "bugs",
+            "issues",
+            "problems",
+        ],
+        "fix": ["fix", "repair", "resolve", "correct", "patch", "fixing", "fixed", "correction"],
+        "mcp": ["mcp", "model context protocol", "mcp server", "mcpbridge"],
+        "api": ["api", "endpoint", "method", "function", "methods", "endpoints"],
+        "memory": ["memory", "memories", "recall", "remember", "store", "storage"],
+        "view": ["view", "views", "viewport", "viewports", "sheet", "sheets"],
+        "floor": ["floor", "level", "story", "floors", "levels", "stories"],
+        "door": ["door", "doors", "opening", "openings", "doorway"],
+        "window": ["window", "windows", "glazing"],
+        "room": ["room", "rooms", "space", "spaces", "area", "areas"],
+        "project": ["project", "projects", "model", "models", "file", "files"],
+        "element": ["element", "elements", "object", "objects", "component", "components"],
+        "place": ["place", "placement", "placing", "position", "positioning", "locate"],
+        "get": ["get", "retrieve", "fetch", "obtain", "query", "find", "search"],
+        "update": ["update", "modify", "change", "edit", "updating", "modifying"],
+        "dimension": ["dimension", "dimensions", "dim", "dims", "measurement"],
     }
 
     # Build reverse lookup
@@ -94,17 +116,90 @@ class TokenizerCompressor:
 
     # Stop words to remove
     STOP_WORDS = {
-        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
-        'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
-        'would', 'could', 'should', 'may', 'might', 'must', 'shall',
-        'can', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by',
-        'from', 'as', 'into', 'through', 'during', 'before', 'after',
-        'above', 'below', 'between', 'under', 'again', 'further',
-        'then', 'once', 'here', 'there', 'when', 'where', 'why',
-        'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some',
-        'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
-        'than', 'too', 'very', 'just', 'and', 'but', 'if', 'or',
-        'because', 'until', 'while', 'this', 'that', 'these', 'those',
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "must",
+        "shall",
+        "can",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "with",
+        "at",
+        "by",
+        "from",
+        "as",
+        "into",
+        "through",
+        "during",
+        "before",
+        "after",
+        "above",
+        "below",
+        "between",
+        "under",
+        "again",
+        "further",
+        "then",
+        "once",
+        "here",
+        "there",
+        "when",
+        "where",
+        "why",
+        "how",
+        "all",
+        "each",
+        "few",
+        "more",
+        "most",
+        "other",
+        "some",
+        "such",
+        "no",
+        "nor",
+        "not",
+        "only",
+        "own",
+        "same",
+        "so",
+        "than",
+        "too",
+        "very",
+        "just",
+        "and",
+        "but",
+        "if",
+        "or",
+        "because",
+        "until",
+        "while",
+        "this",
+        "that",
+        "these",
+        "those",
     }
 
     @classmethod
@@ -123,7 +218,7 @@ class TokenizerCompressor:
         text = text.lower()
 
         # Remove punctuation except hyphens in compound words
-        text = re.sub(r'[^\w\s-]', ' ', text)
+        text = re.sub(r"[^\w\s-]", " ", text)
 
         # Split into tokens
         tokens = text.split()
@@ -146,7 +241,7 @@ class TokenizerCompressor:
         # Sort for order-independent matching
         canonical_tokens.sort()
 
-        return ' '.join(canonical_tokens)
+        return " ".join(canonical_tokens)
 
     @classmethod
     def extract_ngrams(cls, text: str, n: int) -> List[str]:
@@ -159,7 +254,7 @@ class TokenizerCompressor:
 
         ngrams = []
         for i in range(len(tokens) - n + 1):
-            ngram = ' '.join(tokens[i:i+n])
+            ngram = " ".join(tokens[i : i + n])
             ngrams.append(ngram)
 
         return ngrams
@@ -186,7 +281,7 @@ class TokenizerCompressor:
         hash_parts.append(full_hash)
 
         # Combine into single hash key
-        combined = '-'.join(sorted(set(hash_parts)))
+        combined = "-".join(sorted(set(hash_parts)))
         return hashlib.sha256(combined.encode()).hexdigest()[:32]
 
 
@@ -194,9 +289,11 @@ class TokenizerCompressor:
 # O(1) HASH CACHE (Fast path for repeated queries)
 # ============================================================================
 
+
 @dataclass
 class CacheEntry:
     """Single entry in the hash cache."""
+
     result: Any
     timestamp: float
     hit_count: int = 0
@@ -213,7 +310,7 @@ class HashCache:
         self.ttl_seconds = ttl_seconds
         self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
         self._lock = Lock()
-        self._stats = {'hits': 0, 'misses': 0, 'evictions': 0}
+        self._stats = {"hits": 0, "misses": 0, "evictions": 0}
 
     def get(self, key: str) -> Optional[Any]:
         """
@@ -221,7 +318,7 @@ class HashCache:
         """
         with self._lock:
             if key not in self._cache:
-                self._stats['misses'] += 1
+                self._stats["misses"] += 1
                 return None
 
             entry = self._cache[key]
@@ -229,13 +326,13 @@ class HashCache:
             # Check TTL
             if time.time() - entry.timestamp > self.ttl_seconds:
                 del self._cache[key]
-                self._stats['misses'] += 1
+                self._stats["misses"] += 1
                 return None
 
             # Move to end (LRU)
             self._cache.move_to_end(key)
             entry.hit_count += 1
-            self._stats['hits'] += 1
+            self._stats["hits"] += 1
 
             return entry.result
 
@@ -248,12 +345,9 @@ class HashCache:
             while len(self._cache) >= self.max_size:
                 oldest_key = next(iter(self._cache))
                 del self._cache[oldest_key]
-                self._stats['evictions'] += 1
+                self._stats["evictions"] += 1
 
-            self._cache[key] = CacheEntry(
-                result=result,
-                timestamp=time.time()
-            )
+            self._cache[key] = CacheEntry(result=result, timestamp=time.time())
 
     def invalidate(self, key: str) -> None:
         """Remove specific key from cache."""
@@ -269,22 +363,20 @@ class HashCache:
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
         with self._lock:
-            total = self._stats['hits'] + self._stats['misses']
-            hit_rate = self._stats['hits'] / total if total > 0 else 0
-            return {
-                **self._stats,
-                'size': len(self._cache),
-                'hit_rate': f"{hit_rate:.2%}"
-            }
+            total = self._stats["hits"] + self._stats["misses"]
+            hit_rate = self._stats["hits"] / total if total > 0 else 0
+            return {**self._stats, "size": len(self._cache), "hit_rate": f"{hit_rate:.2%}"}
 
 
 # ============================================================================
 # HOT CACHE (Pre-loaded high-importance memories)
 # ============================================================================
 
+
 @dataclass
 class HotMemory:
     """A high-importance memory kept in hot cache."""
+
     id: int
     content: str
     summary: str
@@ -323,12 +415,15 @@ class HotCache:
                 cursor = conn.cursor()
 
                 # Load high-importance memories
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT id, content, summary, project, importance, memory_type, embedding
                     FROM memories
                     WHERE importance >= ?
                     ORDER BY importance DESC, created_at DESC
-                """, (self.min_importance,))
+                """,
+                    (self.min_importance,),
+                )
 
                 self._memories.clear()
                 self._corrections.clear()
@@ -336,19 +431,19 @@ class HotCache:
 
                 for row in cursor.fetchall():
                     mem = HotMemory(
-                        id=row['id'],
-                        content=row['content'],
-                        summary=row['summary'] or '',
-                        project=row['project'] or '',
-                        importance=row['importance'],
-                        memory_type=row['memory_type'] or '',
-                        embedding=row['embedding']
+                        id=row["id"],
+                        content=row["content"],
+                        summary=row["summary"] or "",
+                        project=row["project"] or "",
+                        importance=row["importance"],
+                        memory_type=row["memory_type"] or "",
+                        embedding=row["embedding"],
                     )
 
                     self._memories[mem.id] = mem
 
                     # Track corrections separately
-                    if mem.memory_type == 'error' or 'correction' in mem.content.lower():
+                    if mem.memory_type == "error" or "correction" in mem.content.lower():
                         self._corrections.append(mem)
 
                     # Index by project
@@ -396,16 +491,17 @@ class HotCache:
         """Get hot cache statistics."""
         with self._lock:
             return {
-                'total_memories': len(self._memories),
-                'corrections': len(self._corrections),
-                'projects': len(self._by_project),
-                'last_refresh': datetime.fromtimestamp(self._last_refresh).isoformat()
+                "total_memories": len(self._memories),
+                "corrections": len(self._corrections),
+                "projects": len(self._by_project),
+                "last_refresh": datetime.fromtimestamp(self._last_refresh).isoformat(),
             }
 
 
 # ============================================================================
 # CONTEXT-AWARE GATING (Filter irrelevant memories)
 # ============================================================================
+
 
 class ContextGate:
     """
@@ -426,7 +522,7 @@ class ContextGate:
         context_embedding: np.ndarray,
         memory_age_days: float,
         memory_importance: int,
-        memory_access_count: int
+        memory_access_count: int,
     ) -> float:
         """
         Compute relevance score for a memory given current context.
@@ -446,7 +542,7 @@ class ContextGate:
             similarity = 0.5  # Neutral if no embeddings
 
         # Recency decay
-        recency_score = self.decay_factor ** memory_age_days
+        recency_score = self.decay_factor**memory_age_days
 
         # Importance boost (normalize to 0-1)
         importance_score = memory_importance / 10.0
@@ -456,10 +552,10 @@ class ContextGate:
 
         # Weighted combination
         relevance = (
-            0.5 * similarity +          # Semantic relevance is most important
-            0.2 * recency_score +       # Recent memories preferred
-            0.2 * importance_score +    # Important memories preferred
-            0.1 * access_score          # Frequently accessed preferred
+            0.5 * similarity  # Semantic relevance is most important
+            + 0.2 * recency_score  # Recent memories preferred
+            + 0.2 * importance_score  # Important memories preferred
+            + 0.1 * access_score  # Frequently accessed preferred
         )
 
         return float(relevance)
@@ -468,7 +564,7 @@ class ContextGate:
         self,
         memories: List[Dict[str, Any]],
         context_embedding: Optional[np.ndarray],
-        context_project: Optional[str] = None
+        context_project: Optional[str] = None,
     ) -> List[Tuple[Dict[str, Any], float]]:
         """
         Apply gating to filter and rank memories.
@@ -481,17 +577,17 @@ class ContextGate:
         for memory in memories:
             # Extract embedding if present
             mem_embedding = None
-            if memory.get('embedding'):
+            if memory.get("embedding"):
                 try:
-                    mem_embedding = np.frombuffer(memory['embedding'], dtype=np.float32)
+                    mem_embedding = np.frombuffer(memory["embedding"], dtype=np.float32)
                 except Exception:
                     pass
 
             # Calculate age in days
-            created_at = memory.get('created_at', '')
+            created_at = memory.get("created_at", "")
             try:
                 if isinstance(created_at, str):
-                    created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                 else:
                     created_dt = created_at
                 age_days = (datetime.now() - created_dt.replace(tzinfo=None)).days
@@ -503,12 +599,12 @@ class ContextGate:
                 memory_embedding=mem_embedding,
                 context_embedding=context_embedding,
                 memory_age_days=age_days,
-                memory_importance=memory.get('importance', 5),
-                memory_access_count=memory.get('access_count', 0)
+                memory_importance=memory.get("importance", 5),
+                memory_access_count=memory.get("access_count", 0),
             )
 
             # Project match boost
-            if context_project and memory.get('project') == context_project:
+            if context_project and memory.get("project") == context_project:
                 relevance = min(1.0, relevance * 1.3)  # 30% boost for same project
 
             # Apply gate
@@ -524,6 +620,7 @@ class ContextGate:
 # ============================================================================
 # ENGRAM MEMORY SYSTEM (Main integration class)
 # ============================================================================
+
 
 class EngramMemory:
     """
@@ -549,17 +646,15 @@ class EngramMemory:
         # Initialize components
         self.compressor = TokenizerCompressor()
         self.hash_cache = HashCache(
-            max_size=self.config.hash_cache_max_size,
-            ttl_seconds=self.config.hash_cache_ttl_seconds
+            max_size=self.config.hash_cache_max_size, ttl_seconds=self.config.hash_cache_ttl_seconds
         )
         self.hot_cache = HotCache(
             db_path=db_path,
             min_importance=self.config.hot_cache_min_importance,
-            refresh_interval=self.config.hot_cache_refresh_interval
+            refresh_interval=self.config.hot_cache_refresh_interval,
         )
         self.gate = ContextGate(
-            threshold=self.config.gating_threshold,
-            decay_factor=self.config.gating_decay_factor
+            threshold=self.config.gating_threshold, decay_factor=self.config.gating_decay_factor
         )
 
     def recall(self, query: str, project: str = None, limit: int = 10) -> Dict[str, Any]:
@@ -575,18 +670,13 @@ class EngramMemory:
         # Compress and hash query
         compressed = self.compressor.compress(query)
         cache_key = self.compressor.compute_hash(
-            f"{query}:{project or ''}:{limit}",
-            self.config.ngram_sizes
+            f"{query}:{project or ''}:{limit}", self.config.ngram_sizes
         )
 
         # Check hash cache (O(1) fast path)
         cached = self.hash_cache.get(cache_key)
         if cached is not None:
-            return {
-                'source': 'hash_cache',
-                'results': cached,
-                'compressed_query': compressed
-            }
+            return {"source": "hash_cache", "results": cached, "compressed_query": compressed}
 
         # Check hot cache for corrections first
         hot_corrections = self.hot_cache.get_corrections(limit=3)
@@ -598,20 +688,22 @@ class EngramMemory:
         # Merge hot cache results (they always appear first)
         hot_results = []
         for hm in hot_corrections + hot_project:
-            hot_results.append({
-                'id': hm.id,
-                'content': hm.content,
-                'summary': hm.summary,
-                'project': hm.project,
-                'importance': hm.importance,
-                'memory_type': hm.memory_type,
-                'source': 'hot_cache'
-            })
+            hot_results.append(
+                {
+                    "id": hm.id,
+                    "content": hm.content,
+                    "summary": hm.summary,
+                    "project": hm.project,
+                    "importance": hm.importance,
+                    "memory_type": hm.memory_type,
+                    "source": "hot_cache",
+                }
+            )
 
         # Deduplicate
-        seen_ids = {r['id'] for r in hot_results}
+        seen_ids = {r["id"] for r in hot_results}
         for r in results:
-            if r['id'] not in seen_ids:
+            if r["id"] not in seen_ids:
                 hot_results.append(r)
 
         final_results = hot_results[:limit]
@@ -619,18 +711,10 @@ class EngramMemory:
         # Cache the result
         self.hash_cache.put(cache_key, final_results)
 
-        return {
-            'source': 'database',
-            'results': final_results,
-            'compressed_query': compressed
-        }
+        return {"source": "database", "results": final_results, "compressed_query": compressed}
 
     def recall_gated(
-        self,
-        query: str,
-        context_embedding: np.ndarray = None,
-        project: str = None,
-        limit: int = 10
+        self, query: str, context_embedding: np.ndarray = None, project: str = None, limit: int = 10
     ) -> List[Tuple[Dict[str, Any], float]]:
         """
         Recall with context-aware gating.
@@ -642,9 +726,7 @@ class EngramMemory:
 
         # Apply gating
         gated = self.gate.gate(
-            memories=raw['results'],
-            context_embedding=context_embedding,
-            context_project=project
+            memories=raw["results"], context_embedding=context_embedding, context_project=project
         )
 
         return gated[:limit]
@@ -674,14 +756,14 @@ class EngramMemory:
     def get_stats(self) -> Dict[str, Any]:
         """Get comprehensive statistics."""
         return {
-            'hash_cache': self.hash_cache.get_stats(),
-            'hot_cache': self.hot_cache.get_stats(),
-            'config': {
-                'hash_cache_max_size': self.config.hash_cache_max_size,
-                'hash_cache_ttl_seconds': self.config.hash_cache_ttl_seconds,
-                'gating_threshold': self.config.gating_threshold,
-                'memory_allocation_ratio': self.config.memory_allocation_ratio
-            }
+            "hash_cache": self.hash_cache.get_stats(),
+            "hot_cache": self.hot_cache.get_stats(),
+            "config": {
+                "hash_cache_max_size": self.config.hash_cache_max_size,
+                "hash_cache_ttl_seconds": self.config.hash_cache_ttl_seconds,
+                "gating_threshold": self.config.gating_threshold,
+                "memory_allocation_ratio": self.config.memory_allocation_ratio,
+            },
         }
 
     def _query_database(self, query: str, project: str, limit: int) -> List[Dict[str, Any]]:
@@ -731,6 +813,7 @@ class EngramMemory:
 # Global instance (lazy initialization)
 _engram_instance: Optional[EngramMemory] = None
 
+
 def get_engram(db_path: Path = None) -> EngramMemory:
     """Get or create the global Engram instance."""
     global _engram_instance
@@ -753,10 +836,7 @@ def engram_recall(query: str, project: str = None, limit: int = 10) -> Dict[str,
 
 
 def engram_recall_gated(
-    query: str,
-    context_embedding: np.ndarray = None,
-    project: str = None,
-    limit: int = 10
+    query: str, context_embedding: np.ndarray = None, project: str = None, limit: int = 10
 ) -> List[Tuple[Dict[str, Any], float]]:
     """
     Gated recall that filters by context relevance.
@@ -771,11 +851,11 @@ def engram_get_corrections(limit: int = 10) -> List[Dict[str, Any]]:
     corrections = get_engram().get_corrections(limit)
     return [
         {
-            'id': c.id,
-            'content': c.content,
-            'summary': c.summary,
-            'project': c.project,
-            'importance': c.importance
+            "id": c.id,
+            "content": c.content,
+            "summary": c.summary,
+            "project": c.project,
+            "importance": c.importance,
         }
         for c in corrections
     ]
@@ -850,16 +930,16 @@ if __name__ == "__main__":
     start = time.time()
     result1 = engram.recall(test_query)
     time1 = time.time() - start
-    print(f"First call (cache miss): {time1*1000:.2f}ms, source={result1['source']}")
+    print(f"First call (cache miss): {time1 * 1000:.2f}ms, source={result1['source']}")
 
     # Second call (hit)
     start = time.time()
     result2 = engram.recall(test_query)
     time2 = time.time() - start
-    print(f"Second call (cache hit): {time2*1000:.2f}ms, source={result2['source']}")
+    print(f"Second call (cache hit): {time2 * 1000:.2f}ms, source={result2['source']}")
 
     if time1 > 0:
-        print(f"Speedup: {time1/max(time2, 0.0001):.1f}x faster")
+        print(f"Speedup: {time1 / max(time2, 0.0001):.1f}x faster")
 
     # Overall stats
     print("\n4. OVERALL STATISTICS")

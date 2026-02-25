@@ -36,9 +36,11 @@ class Priority(Enum):
     HIGH = 3
     CRITICAL = 4
 
+
 @dataclass
 class Notification:
     """A notification to show the user."""
+
     title: str
     message: str
     priority: Priority
@@ -55,7 +57,7 @@ class Notification:
             "category": self.category,
             "timestamp": self.timestamp,
             "actions": self.actions or [],
-            "auto_dismiss_seconds": self.auto_dismiss_seconds
+            "auto_dismiss_seconds": self.auto_dismiss_seconds,
         }
 
 
@@ -71,7 +73,7 @@ class NotificationEngine:
 
     def send_windows_toast(self, notification: Notification) -> bool:
         """Send Windows toast notification."""
-        ps_script = f'''
+        ps_script = f"""
         [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
         [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
 
@@ -90,12 +92,13 @@ class NotificationEngine:
         $xml.LoadXml($template)
         $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
         [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-        '''
+        """
 
         try:
             subprocess.run(
-                ['powershell', '-WindowStyle', 'Hidden', '-Command', ps_script],
-                capture_output=True, timeout=10
+                ["powershell", "-WindowStyle", "Hidden", "-Command", ps_script],
+                capture_output=True,
+                timeout=10,
             )
             return True
         except Exception as e:
@@ -104,21 +107,25 @@ class NotificationEngine:
 
     def send_sound_alert(self, priority: Priority):
         """Play a sound alert based on priority."""
-        ps_script = '''
+        ps_script = """
         $sound = New-Object System.Media.SoundPlayer
         $sound.SoundLocation = "C:\\Windows\\Media\\notify.wav"
         $sound.Play()
-        '''
+        """
 
         try:
-            subprocess.run(['powershell', '-WindowStyle', 'Hidden', '-Command', ps_script], capture_output=True, timeout=5)
+            subprocess.run(
+                ["powershell", "-WindowStyle", "Hidden", "-Command", ps_script],
+                capture_output=True,
+                timeout=5,
+            )
         except Exception:
             pass
 
     def log_notification(self, notification: Notification):
         """Log notification to file."""
-        with open(NOTIFICATIONS_LOG, 'a') as f:
-            f.write(json.dumps(notification.to_dict()) + '\n')
+        with open(NOTIFICATIONS_LOG, "a") as f:
+            f.write(json.dumps(notification.to_dict()) + "\n")
 
     def deliver(self, notification: Notification, toast: bool = True, sound: bool = False):
         """Deliver a notification through configured channels."""
@@ -191,15 +198,15 @@ class ProactiveMonitor:
                         return Notification(
                             title="Project Mismatch Detected",
                             message=f"{name_a}: {apps_with_docs[name_a].get('document', 'Unknown')}\n"
-                                    f"{name_b}: {apps_with_docs[name_b].get('document', 'Unknown')}",
+                            f"{name_b}: {apps_with_docs[name_b].get('document', 'Unknown')}",
                             priority=Priority.HIGH,
                             category="mismatch",
                             timestamp=datetime.now().isoformat(),
                             actions=[
                                 {"label": f"Switch {name_a}", "action": f"switch_{name_a}"},
                                 {"label": f"Switch {name_b}", "action": f"switch_{name_b}"},
-                                {"label": "Ignore", "action": "ignore"}
-                            ]
+                                {"label": "Ignore", "action": "ignore"},
+                            ],
                         )
 
         return None
@@ -225,22 +232,24 @@ class ProactiveMonitor:
         """)
 
         for row in cursor.fetchall():
-            created = datetime.fromisoformat(row['created_at'].replace(' ', 'T'))
+            created = datetime.fromisoformat(row["created_at"].replace(" ", "T"))
 
             # Only remind if > 1 hour old
             if datetime.now() - created > timedelta(hours=1):
-                content = row['content']
-                if '### Next Steps' in content:
-                    steps = content.split('### Next Steps')[1].split('###')[0]
-                    first_step = steps.strip().split('\n')[0] if steps else "Continue work"
+                content = row["content"]
+                if "### Next Steps" in content:
+                    steps = content.split("### Next Steps")[1].split("###")[0]
+                    first_step = steps.strip().split("\n")[0] if steps else "Continue work"
 
-                    notifications.append(Notification(
-                        title=f"Unfinished: {row['project'] or 'Project'}",
-                        message=first_step[:100],
-                        priority=Priority.MEDIUM,
-                        category="reminder",
-                        timestamp=datetime.now().isoformat()
-                    ))
+                    notifications.append(
+                        Notification(
+                            title=f"Unfinished: {row['project'] or 'Project'}",
+                            message=first_step[:100],
+                            priority=Priority.MEDIUM,
+                            category="reminder",
+                            timestamp=datetime.now().isoformat(),
+                        )
+                    )
 
         conn.close()
         return notifications
@@ -252,25 +261,29 @@ class ProactiveMonitor:
 
         # End of day reminder (after 5 PM)
         if now.hour >= 17:
-            notifications.append(Notification(
-                title="End of Day",
-                message="Consider summarizing today's work before ending session.",
-                priority=Priority.LOW,
-                category="reminder",
-                timestamp=now.isoformat(),
-                auto_dismiss_seconds=300
-            ))
+            notifications.append(
+                Notification(
+                    title="End of Day",
+                    message="Consider summarizing today's work before ending session.",
+                    priority=Priority.LOW,
+                    category="reminder",
+                    timestamp=now.isoformat(),
+                    auto_dismiss_seconds=300,
+                )
+            )
 
         # Periodic save reminder (every hour on the hour)
         if now.minute == 0:
-            notifications.append(Notification(
-                title="Periodic Save Reminder",
-                message="Make sure your work is saved.",
-                priority=Priority.LOW,
-                category="reminder",
-                timestamp=now.isoformat(),
-                auto_dismiss_seconds=60
-            ))
+            notifications.append(
+                Notification(
+                    title="Periodic Save Reminder",
+                    message="Make sure your work is saved.",
+                    priority=Priority.LOW,
+                    category="reminder",
+                    timestamp=now.isoformat(),
+                    auto_dismiss_seconds=60,
+                )
+            )
 
         return notifications
 
@@ -300,10 +313,7 @@ class ProactiveMonitor:
         results = []
         for notif in all_notifications:
             delivered = self.engine.deliver(notif, toast=True, sound=False)
-            results.append({
-                **notif.to_dict(),
-                "delivered": delivered
-            })
+            results.append({**notif.to_dict(), "delivered": delivered})
 
         return results
 
@@ -328,7 +338,7 @@ def main():
                 message=sys.argv[2] if len(sys.argv) > 2 else "This is a test from Claude Code",
                 priority=Priority.MEDIUM,
                 category="info",
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
             )
             monitor.engine.send_windows_toast(notif)
             print('{"status": "sent"}')

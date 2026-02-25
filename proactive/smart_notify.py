@@ -32,8 +32,15 @@ DEFAULT_STATE_FILE = Path(__file__).parent / "system_state.json"
 class NotificationRule:
     """A rule for triggering notifications."""
 
-    def __init__(self, name: str, trigger: str, condition: Callable,
-                 action: str, message_template: str, cooldown_minutes: int = 5):
+    def __init__(
+        self,
+        name: str,
+        trigger: str,
+        condition: Callable,
+        action: str,
+        message_template: str,
+        cooldown_minutes: int = 5,
+    ):
         self.name = name
         self.trigger = trigger
         self.condition = condition
@@ -64,14 +71,16 @@ class SmartNotifier:
         Override or extend this by subclassing or calling add_rule().
         """
         # High memory warning
-        self.rules.append(NotificationRule(
-            name="high_memory",
-            trigger="system_status",
-            condition=lambda e: e.get('memory_percent', 0) > 85,
-            action="notify_local",
-            message_template="High memory usage: {memory_percent}%. Consider closing some apps.",
-            cooldown_minutes=30
-        ))
+        self.rules.append(
+            NotificationRule(
+                name="high_memory",
+                trigger="system_status",
+                condition=lambda e: e.get("memory_percent", 0) > 85,
+                action="notify_local",
+                message_template="High memory usage: {memory_percent}%. Consider closing some apps.",
+                cooldown_minutes=30,
+            )
+        )
 
     def add_rule(self, rule: NotificationRule):
         """Add a custom notification rule."""
@@ -105,23 +114,18 @@ class SmartNotifier:
         events = []
 
         # Check system status
-        system = new_state.get('system', {})
-        if system.get('memory_percent', 0) > 85:
-            events.append({
-                'type': 'system_status',
-                'memory_percent': system.get('memory_percent', 0)
-            })
+        system = new_state.get("system", {})
+        if system.get("memory_percent", 0) > 85:
+            events.append(
+                {"type": "system_status", "memory_percent": system.get("memory_percent", 0)}
+            )
 
         # Check app changes (generic - any new app)
-        old_apps = {a.get('name', '') for a in old_state.get('applications', [])}
-        for app in new_state.get('applications', []):
-            name = app.get('name', '')
+        old_apps = {a.get("name", "") for a in old_state.get("applications", [])}
+        for app in new_state.get("applications", []):
+            name = app.get("name", "")
             if name and name not in old_apps:
-                events.append({
-                    'type': 'app_opened',
-                    'app': name,
-                    'title': app.get('title', '')
-                })
+                events.append({"type": "app_opened", "app": name, "title": app.get("title", "")})
 
         return events
 
@@ -131,10 +135,20 @@ class SmartNotifier:
         formatted = f"[{timestamp}] {message}"
 
         try:
-            from .notify_channels import notify_all, notify_voice_only, notify_telegram_only, send_console
+            from .notify_channels import (
+                notify_all,
+                notify_voice_only,
+                notify_telegram_only,
+                send_console,
+            )
         except ImportError:
             try:
-                from notify_channels import notify_all, notify_voice_only, notify_telegram_only, send_console
+                from notify_channels import (
+                    notify_all,
+                    notify_voice_only,
+                    notify_telegram_only,
+                    send_console,
+                )
             except ImportError:
                 # Ultimate fallback
                 print(f"NOTIFY: {formatted}")
@@ -194,6 +208,7 @@ class SmartNotifier:
 def main():
     """Main entry point."""
     import sys
+
     logging.basicConfig(level=logging.INFO)
 
     notifier = SmartNotifier()

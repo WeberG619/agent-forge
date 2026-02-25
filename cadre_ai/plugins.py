@@ -110,9 +110,7 @@ def install_from_url(url: str, dest_dir: Optional[Path] = None) -> Path:
     filename = _filename_from_url(raw_url)
 
     if Path(filename).suffix not in (".md", ".yaml", ".yml"):
-        raise ValueError(
-            f"URL must point to a .md or .yaml file, got: {filename}"
-        )
+        raise ValueError(f"URL must point to a .md or .yaml file, got: {filename}")
 
     print(f"Downloading {raw_url} ...")
     try:
@@ -131,8 +129,7 @@ def install_from_url(url: str, dest_dir: Optional[Path] = None) -> Path:
     if errors:
         dest_path.unlink(missing_ok=True)
         raise RuntimeError(
-            "Downloaded agent failed validation:\n"
-            + "\n".join(f"  - {e}" for e in errors)
+            "Downloaded agent failed validation:\n" + "\n".join(f"  - {e}" for e in errors)
         )
 
     print(f"Installed: {dest_path}")
@@ -160,15 +157,12 @@ def install_from_file(path: Path, dest_dir: Optional[Path] = None) -> Path:
         raise FileNotFoundError(f"Agent file not found: {source}")
 
     if source.suffix not in (".md", ".yaml", ".yml"):
-        raise ValueError(
-            f"Agent file must be .md or .yaml, got: {source.suffix}"
-        )
+        raise ValueError(f"Agent file must be .md or .yaml, got: {source.suffix}")
 
     errors = validate_agent(source)
     if errors:
         raise RuntimeError(
-            "Agent file failed validation:\n"
-            + "\n".join(f"  - {e}" for e in errors)
+            "Agent file failed validation:\n" + "\n".join(f"  - {e}" for e in errors)
         )
 
     target_dir = dest_dir or CLAUDE_AGENTS_DIR
@@ -223,9 +217,7 @@ def uninstall(name: str, source_dir: Optional[Path] = None) -> bool:
     """
     stem = Path(name).stem  # strip extension if provided
 
-    search_dirs: list[Path] = (
-        [source_dir] if source_dir else [CLAUDE_AGENTS_DIR, CADRE_PLUGINS_DIR]
-    )
+    search_dirs: list[Path] = [source_dir] if source_dir else [CLAUDE_AGENTS_DIR, CADRE_PLUGINS_DIR]
 
     for directory in search_dirs:
         if not directory.is_dir():
@@ -271,12 +263,14 @@ def search_registry(query: str, registry_path: Optional[Path] = None) -> list[di
     results = []
 
     for entry in entries:
-        searchable = " ".join([
-            entry.get("name", ""),
-            entry.get("description", ""),
-            entry.get("author", ""),
-            " ".join(entry.get("tags", [])),
-        ]).lower()
+        searchable = " ".join(
+            [
+                entry.get("name", ""),
+                entry.get("description", ""),
+                entry.get("author", ""),
+                " ".join(entry.get("tags", [])),
+            ]
+        ).lower()
 
         if q in searchable:
             results.append(entry)

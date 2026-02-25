@@ -60,7 +60,7 @@ logger = logging.getLogger("scheduler")
 BRIEFING_TIME = os.getenv("PROACTIVE_BRIEFING_TIME", "07:00")
 EVENING_TIME = os.getenv("PROACTIVE_EVENING_TIME", "18:00")
 WEEKLY_OVERVIEW_TIME = os.getenv("PROACTIVE_WEEKLY_OVERVIEW", "07:15")  # Monday
-WEEKLY_RECAP_TIME = os.getenv("PROACTIVE_WEEKLY_RECAP", "17:00")       # Friday
+WEEKLY_RECAP_TIME = os.getenv("PROACTIVE_WEEKLY_RECAP", "17:00")  # Friday
 
 # Loop intervals (seconds)
 SMART_NOTIFY_INTERVAL = 30
@@ -101,6 +101,7 @@ class ProactiveScheduler:
         try:
             briefing = generate_briefing()
             from notify_channels import notify_all
+
             notify_all(briefing, voice=True)
             self.tracker.set_last_date("last_briefing_date")
             logger.info("Morning briefing sent successfully")
@@ -116,8 +117,10 @@ class ProactiveScheduler:
         logger.info("Running evening summary...")
         try:
             from evening_summary import generate_evening_summary
+
             summary = generate_evening_summary()
             from notify_channels import notify_telegram_only
+
             notify_telegram_only(summary)
             self.tracker.set_last_date("last_evening_date")
             logger.info("Evening summary sent successfully")
@@ -135,8 +138,10 @@ class ProactiveScheduler:
         logger.info("Running weekly overview...")
         try:
             from weekly_routines import generate_weekly_overview
+
             overview = generate_weekly_overview()
             from notify_channels import notify_telegram_only
+
             notify_telegram_only(overview)
             self.tracker.set_last_date("last_weekly_overview_date")
             logger.info("Weekly overview sent successfully")
@@ -152,8 +157,10 @@ class ProactiveScheduler:
         logger.info("Running weekly recap...")
         try:
             from weekly_routines import generate_weekly_recap
+
             recap = generate_weekly_recap()
             from notify_channels import notify_telegram_only
+
             notify_telegram_only(recap)
             self.tracker.set_last_date("last_weekly_recap_date")
             logger.info("Weekly recap sent successfully")
@@ -189,7 +196,10 @@ class ProactiveScheduler:
                     if self.tracker.check_cooldown(f"health_alert_{name}", 30):
                         try:
                             from notify_channels import notify_telegram_only
-                            notify_telegram_only(f"Service alert: {name} appears down (checked {fail_count} times)")
+
+                            notify_telegram_only(
+                                f"Service alert: {name} appears down (checked {fail_count} times)"
+                            )
                             self.tracker.record_cooldown(f"health_alert_{name}")
                         except Exception as e:
                             logger.error(f"Failed to send health alert: {e}")
@@ -334,7 +344,9 @@ def main():
     """Entry point with CLI flags."""
     parser = argparse.ArgumentParser(description="Proactive Scheduler - Central Orchestrator")
     parser.add_argument("--briefing-now", action="store_true", help="Run morning briefing now")
-    parser.add_argument("--test-calendar", action="store_true", help="Run one calendar monitor cycle")
+    parser.add_argument(
+        "--test-calendar", action="store_true", help="Run one calendar monitor cycle"
+    )
     parser.add_argument("--test-email", action="store_true", help="Run one email monitor cycle")
     parser.add_argument("--test-evening", action="store_true", help="Run evening summary now")
     parser.add_argument("--test-health", action="store_true", help="Run one health check cycle")
@@ -348,6 +360,7 @@ def main():
         briefing = generate_briefing()
         print(briefing)
         from notify_channels import notify_all
+
         notify_all(briefing, voice=True)
         tracker.set_last_date("last_briefing_date")
         tracker.save()
@@ -369,9 +382,11 @@ def main():
 
     if args.test_evening:
         from evening_summary import generate_evening_summary
+
         summary = generate_evening_summary()
         print(summary)
         from notify_channels import notify_telegram_only
+
         notify_telegram_only(summary)
         tracker.save()
         return
@@ -386,12 +401,15 @@ def main():
     if args.test_weekly:
         if args.test_weekly == "overview":
             from weekly_routines import generate_weekly_overview
+
             result = generate_weekly_overview()
         else:
             from weekly_routines import generate_weekly_recap
+
             result = generate_weekly_recap()
         print(result)
         from notify_channels import notify_telegram_only
+
         notify_telegram_only(result)
         tracker.save()
         return

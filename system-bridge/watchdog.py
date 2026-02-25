@@ -30,29 +30,27 @@ MAX_STALE_SECONDS = 60  # consider daemon dead if state not updated for this lon
 MAX_RESTART_ATTEMPTS = 5  # max restarts within restart window
 RESTART_WINDOW = 300  # seconds (5 minutes)
 
+
 # Setup logging
 def setup_logging():
-    logger = logging.getLogger('watchdog')
+    logger = logging.getLogger("watchdog")
     logger.setLevel(logging.INFO)
 
     handler = RotatingFileHandler(
         WATCHDOG_LOG,
         maxBytes=1024 * 1024,  # 1MB
-        backupCount=2
+        backupCount=2,
     )
-    handler.setFormatter(logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s'
-    ))
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(handler)
 
-    if '--console' in sys.argv:
+    if "--console" in sys.argv:
         console = logging.StreamHandler()
-        console.setFormatter(logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
-        ))
+        console.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         logger.addHandler(console)
 
     return logger
+
 
 logger = setup_logging()
 
@@ -73,11 +71,13 @@ class DaemonWatchdog:
             with open(PID_FILE) as f:
                 pid = int(f.read().strip())
 
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
                 # Use tasklist on Windows to avoid os.kill WinError 6
                 result = subprocess.run(
-                    ['tasklist', '/FI', f'PID eq {pid}', '/NH'],
-                    capture_output=True, text=True, timeout=5
+                    ["tasklist", "/FI", f"PID eq {pid}", "/NH"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 return str(pid) in result.stdout
             else:
@@ -124,11 +124,14 @@ class DaemonWatchdog:
         """Check if we can restart (haven't exceeded restart limit)."""
         now = datetime.now()
         # Remove old restart times
-        self.restart_times = [t for t in self.restart_times
-                             if (now - t).total_seconds() < RESTART_WINDOW]
+        self.restart_times = [
+            t for t in self.restart_times if (now - t).total_seconds() < RESTART_WINDOW
+        ]
 
         if len(self.restart_times) >= MAX_RESTART_ATTEMPTS:
-            logger.error(f"Too many restarts ({len(self.restart_times)}) in {RESTART_WINDOW}s window")
+            logger.error(
+                f"Too many restarts ({len(self.restart_times)}) in {RESTART_WINDOW}s window"
+            )
             return False
         return True
 
@@ -136,31 +139,28 @@ class DaemonWatchdog:
         """Start the daemon process."""
         try:
             # Platform-specific process creation
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
                 try:
                     startupinfo = subprocess.STARTUPINFO()
                     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                     startupinfo.wShowWindow = 0  # SW_HIDE
 
                     subprocess.Popen(
-                        ['pythonw', str(DAEMON_SCRIPT)],
+                        ["pythonw", str(DAEMON_SCRIPT)],
                         cwd=str(BASE_DIR),
                         creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
-                        startupinfo=startupinfo
+                        startupinfo=startupinfo,
                     )
                 except (AttributeError, OSError):
                     # Fallback if STARTUPINFO fails
                     subprocess.Popen(
-                        ['pythonw', str(DAEMON_SCRIPT)],
+                        ["pythonw", str(DAEMON_SCRIPT)],
                         cwd=str(BASE_DIR),
-                        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
+                        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
                     )
             else:
                 # Linux/WSL/macOS
-                subprocess.Popen(
-                    ['python3', str(DAEMON_SCRIPT)],
-                    cwd=str(BASE_DIR)
-                )
+                subprocess.Popen(["python3", str(DAEMON_SCRIPT)], cwd=str(BASE_DIR))
 
             self.restart_times.append(datetime.now())
             logger.info("Daemon started")
@@ -223,7 +223,7 @@ class DaemonWatchdog:
 
 
 def main():
-    if '--status' in sys.argv:
+    if "--status" in sys.argv:
         watchdog = DaemonWatchdog()
         running = watchdog.is_daemon_running()
         healthy, reason = watchdog.is_daemon_healthy()

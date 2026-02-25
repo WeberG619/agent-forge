@@ -32,7 +32,7 @@ def main():
         }
 
         session_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(session_file, 'w') as f:
+        with open(session_file, "w") as f:
             json.dump(session_state, f, indent=2)
 
     except Exception:

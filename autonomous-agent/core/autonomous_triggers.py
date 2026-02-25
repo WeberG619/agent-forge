@@ -58,6 +58,7 @@ PRIORITY_SENDERS = [
 @dataclass
 class TriggerEvent:
     """An event that can trigger autonomous action."""
+
     trigger_type: str
     timestamp: datetime
     data: Dict
@@ -67,6 +68,7 @@ class TriggerEvent:
 @dataclass
 class WatchedFolder:
     """A folder being watched for changes."""
+
     path: str
     patterns: List[str]
     action: str
@@ -77,6 +79,7 @@ class WatchedFolder:
 # ============================================
 # AUTONOMOUS TRIGGER SYSTEM
 # ============================================
+
 
 class AutonomousTriggers:
     """
@@ -136,11 +139,7 @@ class AutonomousTriggers:
         for config in WATCH_FOLDERS:
             path = config["path"]
             if os.path.exists(path):
-                wf = WatchedFolder(
-                    path=path,
-                    patterns=config["patterns"],
-                    action=config["action"]
-                )
+                wf = WatchedFolder(path=path, patterns=config["patterns"], action=config["action"])
                 # Initial scan to know existing files
                 wf.known_files = self._scan_folder(path, config["patterns"])
                 wf.last_scan = datetime.now()
@@ -219,23 +218,19 @@ class AutonomousTriggers:
                 logger.info(f"Dispatching floor-plan-processor for: {filename}")
                 event = DispatchEvent(
                     trigger_type="new_pdf_floor_plan",
-                    data={
-                        "filepath": filepath,
-                        "filename": filename,
-                        "source": "folder watch"
-                    },
-                    priority="high"
+                    data={"filepath": filepath, "filename": filename, "source": "folder watch"},
+                    priority="high",
                 )
                 await self.dispatcher.dispatch(event)
             else:
                 # Notify for non-floor-plan PDFs
                 await self.agent.notifier.send(
-                    "New PDF Detected",
-                    f"{filename}\n\nPath: {filepath}",
-                    "low"
+                    "New PDF Detected", f"{filename}\n\nPath: {filepath}", "low"
                 )
 
-            self._log_activity("pdf_detected", {"filename": filename, "is_floor_plan": is_floor_plan})
+            self._log_activity(
+                "pdf_detected", {"filename": filename, "is_floor_plan": is_floor_plan}
+            )
 
         elif action == "notify_new_client_file":
             logger.info(f"New client file: {filename}")
@@ -248,28 +243,25 @@ class AutonomousTriggers:
                     "filename": filename,
                     "event_type": "client file",
                     "contact_name": "Client",
-                    "subject": f"New file: {filename}"
+                    "subject": f"New file: {filename}",
                 },
-                priority="medium"
+                priority="medium",
             )
             await self.dispatcher.dispatch(event)
 
-            self._log_activity("client_file_detected", {
-                "filename": filename,
-                "file_type": file_ext
-            })
+            self._log_activity(
+                "client_file_detected", {"filename": filename, "file_type": file_ext}
+            )
 
         else:
             # Unknown action - just notify
             await self.agent.notifier.send(
-                "New File Detected",
-                f"Folder: {os.path.dirname(filepath)}\nFile: {filename}",
-                "low"
+                "New File Detected", f"Folder: {os.path.dirname(filepath)}\nFile: {filename}", "low"
             )
 
     def _quick_floor_plan_check(self, filename: str) -> bool:
         """Quick heuristic check if a file might be a floor plan."""
-        floor_plan_keywords = ['floor', 'plan', 'layout', 'architectural', 'level', 'l1', 'l2']
+        floor_plan_keywords = ["floor", "plan", "layout", "architectural", "level", "l1", "l2"]
         filename_lower = filename.lower()
         return any(kw in filename_lower for kw in floor_plan_keywords)
 
@@ -314,16 +306,15 @@ class AutonomousTriggers:
                             "event_type": "priority email",
                             "contact_name": name,
                             "subject": subject,
-                            "preview": preview[:500]
+                            "preview": preview[:500],
                         },
-                        priority=priority
+                        priority=priority,
                     )
                     await self.dispatcher.dispatch(event)
 
-                    self._log_activity("priority_email_detected", {
-                        "from": name,
-                        "subject": subject
-                    })
+                    self._log_activity(
+                        "priority_email_detected", {"from": name, "subject": subject}
+                    )
                     break
 
     # ==========================================
@@ -340,7 +331,9 @@ class AutonomousTriggers:
 
         # Detect work apps - customize this list
         work_apps = ["Code", "Cursor", "PyCharm", "IntelliJ", "WebStorm", "Terminal"]
-        active_work_apps = [a for a in apps if any(w in a.get("ProcessName", "") for w in work_apps)]
+        active_work_apps = [
+            a for a in apps if any(w in a.get("ProcessName", "") for w in work_apps)
+        ]
 
         if active_work_apps and not self.last_active_window:
             # Work session starting
@@ -352,7 +345,7 @@ class AutonomousTriggers:
                 await self.agent.notifier.send(
                     "Work Session Started",
                     f"Detected: {', '.join(app_names)}\n\nUse agent_control.py task to queue background work.",
-                    "low"
+                    "low",
                 )
 
         self.last_active_window = active_window
@@ -368,7 +361,7 @@ class AutonomousTriggers:
             "hour": datetime.now().hour,
             "day_of_week": datetime.now().strftime("%A"),
             "type": activity_type,
-            "data": data
+            "data": data,
         }
         self.activity_log.append(entry)
 
@@ -398,11 +391,7 @@ class AutonomousTriggers:
         for key, count in hour_counts.items():
             if count >= 3:  # At least 3 occurrences
                 hour, activity = key.split(":", 1)
-                patterns.append({
-                    "hour": int(hour),
-                    "activity": activity,
-                    "frequency": count
-                })
+                patterns.append({"hour": int(hour), "activity": activity, "frequency": count})
 
         self.learned_patterns = patterns
         logger.info(f"Learned {len(patterns)} patterns from activity")

@@ -67,7 +67,7 @@ class Notifier:
 
         # Truncate if too long
         if len(full_message) > MAX_MESSAGE_LENGTH:
-            full_message = full_message[:MAX_MESSAGE_LENGTH - 20] + "\n\n...(truncated)"
+            full_message = full_message[: MAX_MESSAGE_LENGTH - 20] + "\n\n...(truncated)"
 
         # Log all notifications
         self._log_notification(title, message, priority)
@@ -95,11 +95,7 @@ class Notifier:
             url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
             # Try with Markdown first
-            payload = {
-                "chat_id": TELEGRAM_CHAT_ID,
-                "text": message,
-                "parse_mode": "Markdown"
-            }
+            payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, timeout=30) as resp:
@@ -132,7 +128,7 @@ class Notifier:
             "timestamp": datetime.now().isoformat(),
             "title": title,
             "message": message[:200],
-            "priority": priority
+            "priority": priority,
         }
         self.notification_history.append(entry)
 
@@ -151,15 +147,15 @@ class Notifier:
 # QUICK TEST
 # ============================================
 
+
 async def test():
     notifier = Notifier()
     print(f"Telegram enabled: {notifier.telegram_enabled}")
 
     await notifier.send(
-        "Agent Test",
-        "This is a test notification from the Autonomous Agent.",
-        "medium"
+        "Agent Test", "This is a test notification from the Autonomous Agent.", "medium"
     )
+
 
 if __name__ == "__main__":
     asyncio.run(test())

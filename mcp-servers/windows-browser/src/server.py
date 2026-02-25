@@ -24,6 +24,7 @@ if _BRIDGE_PATH:
     sys.path.insert(0, _BRIDGE_PATH)
 try:
     from client import run_powershell as _ps_bridge
+
     _HAS_BRIDGE = True
 except ImportError:
     _HAS_BRIDGE = False
@@ -44,7 +45,9 @@ except ImportError:
 # Configuration
 DEFAULT_MONITOR = "center"  # left, center, right, or primary
 CDP_PORT = 9222
-SCREENSHOT_DIR = os.environ.get("BROWSER_SCREENSHOT_DIR", os.path.join(tempfile.gettempdir(), "browser-mcp-screenshots"))
+SCREENSHOT_DIR = os.environ.get(
+    "BROWSER_SCREENSHOT_DIR", os.path.join(tempfile.gettempdir(), "browser-mcp-screenshots")
+)
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 # Monitor positions (will be detected dynamically)
@@ -57,6 +60,7 @@ MONITORS = {
 
 server = Server("windows-browser")
 
+
 def run_powershell(script: str, capture_output: bool = True) -> tuple[str, str, int]:
     """Execute PowerShell script and return stdout, stderr, returncode.
     Uses the persistent bridge (~5ms) with subprocess fallback (~590ms)."""
@@ -66,11 +70,13 @@ def run_powershell(script: str, capture_output: bool = True) -> tuple[str, str, 
     result = subprocess.run(
         ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", script],
         capture_output=capture_output,
-        text=True
+        text=True,
     )
     return result.stdout, result.stderr, result.returncode
 
+
 _monitor_cache: Dict[str, Any] = {"data": None, "time": 0.0}
+
 
 def detect_monitors() -> Dict[str, Dict]:
     """Detect monitor configuration from Windows (cached for 60s).
@@ -107,24 +113,24 @@ def detect_monitors() -> Dict[str, Dict]:
             screens = [screens]
 
         # Sort by X position to determine left/center/right
-        screens.sort(key=lambda s: s['X'])
+        screens.sort(key=lambda s: s["X"])
 
         monitors = {}
         for i, screen in enumerate(screens):
-            if screen.get('Primary'):
-                monitors['primary'] = screen
+            if screen.get("Primary"):
+                monitors["primary"] = screen
             if len(screens) == 3:
                 if i == 0:
-                    monitors['left'] = screen
+                    monitors["left"] = screen
                 elif i == 1:
-                    monitors['center'] = screen
+                    monitors["center"] = screen
                 else:
-                    monitors['right'] = screen
+                    monitors["right"] = screen
             elif len(screens) == 2:
                 if i == 0:
-                    monitors['left'] = screen
+                    monitors["left"] = screen
                 else:
-                    monitors['right'] = screen
+                    monitors["right"] = screen
 
         _monitor_cache["data"] = monitors
         _monitor_cache["time"] = now
@@ -132,7 +138,10 @@ def detect_monitors() -> Dict[str, Dict]:
     except Exception:
         return MONITORS
 
-def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", browser: str = "chrome") -> bool:
+
+def launch_browser_with_cdp(
+    url: str = "about:blank", monitor: str = "center", browser: str = "chrome"
+) -> bool:
     """Launch browser with CDP enabled on specified monitor
 
     Args:
@@ -141,32 +150,32 @@ def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", b
         browser: Browser to use (chrome, edge)
     """
     monitors = detect_monitors()
-    mon = monitors.get(monitor, monitors.get('primary', MONITORS['center']))
+    mon = monitors.get(monitor, monitors.get("primary", MONITORS["center"]))
 
     # Calculate window position with margins
-    x = mon['X'] + 50
-    y = mon['Y'] + 50
-    width = mon['Width'] - 100
-    height = mon['Height'] - 100
+    x = mon["X"] + 50
+    y = mon["Y"] + 50
+    width = mon["Width"] - 100
+    height = mon["Height"] - 100
 
     # Browser paths and process names
     browser_config = {
         "chrome": {
             "paths": [
                 "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-                "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+                "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
             ],
             "profile_dir": "$env:TEMP\\chrome-cdp-profile",
-            "process_name": "chrome"
+            "process_name": "chrome",
         },
         "edge": {
             "paths": [
                 "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
             ],
             "profile_dir": "$env:TEMP\\edge-cdp-profile",
-            "process_name": "msedge"
-        }
+            "process_name": "msedge",
+        },
     }
 
     config = browser_config.get(browser.lower(), browser_config["chrome"])
@@ -174,7 +183,7 @@ def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", b
     script = f"""
     # Find browser executable
     $browserPath = $null
-    $paths = @({', '.join([f'"{p}"' for p in config["paths"]])})
+    $paths = @({", ".join([f'"{p}"' for p in config["paths"]])})
     foreach ($p in $paths) {{
         if (Test-Path $p) {{
             $browserPath = $p
@@ -189,7 +198,7 @@ def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", b
 
     Start-Process $browserPath -ArgumentList @(
         "--remote-debugging-port={CDP_PORT}",
-        "--user-data-dir={config['profile_dir']}",
+        "--user-data-dir={config["profile_dir"]}",
         "--window-position={x},{y}",
         "--window-size={width},{height}",
         "{url}"
@@ -211,7 +220,7 @@ public class Win32Launch {{
 }}
 '@
 
-    $proc = Get-Process {config['process_name']} -ErrorAction SilentlyContinue | Where-Object {{ $_.MainWindowHandle -ne 0 }} | Select-Object -First 1
+    $proc = Get-Process {config["process_name"]} -ErrorAction SilentlyContinue | Where-Object {{ $_.MainWindowHandle -ne 0 }} | Select-Object -First 1
     if ($proc) {{
         [Win32Launch]::ShowWindow($proc.MainWindowHandle, 9)
         [Win32Launch]::BringWindowToTop($proc.MainWindowHandle)
@@ -224,10 +233,12 @@ public class Win32Launch {{
     stdout, stderr, code = run_powershell(script)
     return code == 0
 
+
 # Backward compatibility alias
 def launch_chrome_with_cdp(url: str = "about:blank", monitor: str = "center") -> bool:
     """Launch Chrome with CDP enabled on specified monitor (legacy function)"""
     return launch_browser_with_cdp(url, monitor, "chrome")
+
 
 def cdp_request(method: str, params: dict = None) -> dict:
     """Send a CDP request to Chrome"""
@@ -243,7 +254,7 @@ def cdp_request(method: str, params: dict = None) -> dict:
         # Find a page target
         page_target = None
         for target in targets:
-            if target.get('type') == 'page':
+            if target.get("type") == "page":
                 page_target = target
                 break
 
@@ -253,6 +264,7 @@ def cdp_request(method: str, params: dict = None) -> dict:
         return {"success": True, "target": page_target}
     except Exception as e:
         return {"error": str(e)}
+
 
 def navigate_browser(url: str) -> dict:
     """Navigate the browser to a URL using CDP"""
@@ -302,6 +314,7 @@ public class Win32 {{
 
     return {"success": True, "url": url}
 
+
 def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
     """Take a screenshot of specified monitor.
 
@@ -313,26 +326,29 @@ def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
     Returns (filepath, width, height) or (None, 0, 0) on failure.
     """
     monitors = detect_monitors()
-    mon = monitors.get(monitor, monitors.get('primary', MONITORS['center']))
+    mon = monitors.get(monitor, monitors.get("primary", MONITORS["center"]))
 
     if not filename:
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"screenshot_{monitor}_{timestamp}.jpg"
 
     filepath = os.path.join(SCREENSHOT_DIR, filename)
     # Convert WSL path to Windows path generically
     import re
-    win_path = re.sub(r'^/mnt/([a-z])/', lambda m: m.group(1).upper() + ':\\\\', filepath).replace('/', '\\')
+
+    win_path = re.sub(r"^/mnt/([a-z])/", lambda m: m.group(1).upper() + ":\\\\", filepath).replace(
+        "/", "\\"
+    )
 
     script = f"""
     # NO SetProcessDPIAware - keep virtual coordinates to match click_at()
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
 
-    $x = {mon['X']}
-    $y = {mon['Y']}
-    $width = {mon['Width']}
-    $height = {mon['Height']}
+    $x = {mon["X"]}
+    $y = {mon["Y"]}
+    $width = {mon["Width"]}
+    $height = {mon["Height"]}
 
     $bitmap = New-Object System.Drawing.Bitmap($width, $height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
@@ -349,19 +365,25 @@ def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
     if code == 0:
         # Parse dimensions from output
         try:
-            w, h = stdout.strip().split('x')
+            w, h = stdout.strip().split("x")
             return filepath, int(w), int(h)
         except Exception:
-            return filepath, mon['Width'], mon['Height']
+            return filepath, mon["Width"], mon["Height"]
     else:
         return None, 0, 0
 
+
 AHK_EXE = r"C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+
 
 def _wsl_to_win(path):
     """Convert WSL path to Windows path generically."""
     import re
-    return re.sub(r'^/mnt/([a-z])/', lambda m: m.group(1).upper() + ':\\\\', path).replace('/', '\\')
+
+    return re.sub(r"^/mnt/([a-z])/", lambda m: m.group(1).upper() + ":\\\\", path).replace(
+        "/", "\\"
+    )
+
 
 AHK_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "click.ahk")
 AHK_SCRIPT_WIN = _wsl_to_win(AHK_SCRIPT)
@@ -369,6 +391,7 @@ AHK_SENDKEYS_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "
 AHK_SENDKEYS_SCRIPT_WIN = _wsl_to_win(AHK_SENDKEYS_SCRIPT)
 AHK_SCROLL_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scroll.ahk")
 AHK_SCROLL_SCRIPT_WIN = _wsl_to_win(AHK_SCROLL_SCRIPT)
+
 
 def click_at(x: int, y: int, monitor: str = None, action: str = "click") -> dict:
     """Click at coordinates relative to a monitor's screenshot using AutoHotkey.
@@ -390,8 +413,8 @@ def click_at(x: int, y: int, monitor: str = None, action: str = "click") -> dict
     abs_x, abs_y = x, y
     if monitor and monitor in monitors:
         mon = monitors[monitor]
-        abs_x = mon['X'] + x
-        abs_y = mon['Y'] + y
+        abs_x = mon["X"] + x
+        abs_y = mon["Y"] + y
 
     ahk_cmd = f'& "{AHK_EXE}" "{AHK_SCRIPT_WIN}" {abs_x} {abs_y} {action}'
     stdout, _, code = run_powershell(ahk_cmd)
@@ -400,26 +423,33 @@ def click_at(x: int, y: int, monitor: str = None, action: str = "click") -> dict
     # Parse diagnostic output from AHK: target=X,Y|actual=X,Y|action=...|activewin=...
     result = {"success": code == 0, "target_x": abs_x, "target_y": abs_y}
     try:
-        parts = stdout.split('|')
+        parts = stdout.split("|")
         for part in parts:
-            key, val = part.split('=', 1)
-            if key == 'actual':
-                ax, ay = val.split(',')
-                result['actual_x'] = int(ax)
-                result['actual_y'] = int(ay)
-            elif key == 'activewin':
-                result['active_window'] = val
-            elif key == 'action':
-                result['action'] = val
+            key, val = part.split("=", 1)
+            if key == "actual":
+                ax, ay = val.split(",")
+                result["actual_x"] = int(ax)
+                result["actual_y"] = int(ay)
+            elif key == "activewin":
+                result["active_window"] = val
+            elif key == "action":
+                result["action"] = val
     except Exception:
         pass
 
     return result
 
+
 def type_text(text: str) -> bool:
     """Type text using SendKeys"""
     # Escape special characters for SendKeys
-    escaped = text.replace('{', '{{').replace('}', '}}').replace('+', '{+}').replace('^', '{^}').replace('%', '{%}')
+    escaped = (
+        text.replace("{", "{{")
+        .replace("}", "}}")
+        .replace("+", "{+}")
+        .replace("^", "{^}")
+        .replace("%", "{%}")
+    )
 
     script = f"""
     Add-Type -AssemblyName System.Windows.Forms
@@ -429,6 +459,7 @@ def type_text(text: str) -> bool:
 
     stdout, stderr, code = run_powershell(script)
     return code == 0
+
 
 def send_keys(keys: str) -> dict:
     """Send keyboard input using AutoHotkey's native Send command.
@@ -446,16 +477,19 @@ def send_keys(keys: str) -> dict:
 
     result = {"success": code == 0, "keys": keys}
     try:
-        parts = stdout.split('|')
+        parts = stdout.split("|")
         for part in parts:
-            key, val = part.split('=', 1)
+            key, val = part.split("=", 1)
             result[key] = val
     except Exception:
         pass
 
     return result
 
-def scroll_at(x: int, y: int, monitor: str = None, direction: str = "down", clicks: int = 3) -> dict:
+
+def scroll_at(
+    x: int, y: int, monitor: str = None, direction: str = "down", clicks: int = 3
+) -> dict:
     """Scroll at coordinates using AutoHotkey.
 
     Args:
@@ -471,28 +505,35 @@ def scroll_at(x: int, y: int, monitor: str = None, direction: str = "down", clic
     abs_x, abs_y = x, y
     if monitor and monitor in monitors:
         mon = monitors[monitor]
-        abs_x = mon['X'] + x
-        abs_y = mon['Y'] + y
+        abs_x = mon["X"] + x
+        abs_y = mon["Y"] + y
 
     ahk_cmd = f'& "{AHK_EXE}" "{AHK_SCROLL_SCRIPT_WIN}" {abs_x} {abs_y} {direction} {clicks}'
     stdout, _, code = run_powershell(ahk_cmd)
     stdout = stdout.strip()
 
-    result = {"success": code == 0, "target_x": abs_x, "target_y": abs_y, "direction": direction, "clicks": clicks}
+    result = {
+        "success": code == 0,
+        "target_x": abs_x,
+        "target_y": abs_y,
+        "direction": direction,
+        "clicks": clicks,
+    }
     try:
-        parts = stdout.split('|')
+        parts = stdout.split("|")
         for part in parts:
-            key, val = part.split('=', 1)
-            if key == 'actual':
-                ax, ay = val.split(',')
-                result['actual_x'] = int(ax)
-                result['actual_y'] = int(ay)
-            elif key == 'activewin':
-                result['active_window'] = val
+            key, val = part.split("=", 1)
+            if key == "actual":
+                ax, ay = val.split(",")
+                result["actual_x"] = int(ax)
+                result["actual_y"] = int(ay)
+            elif key == "activewin":
+                result["active_window"] = val
     except Exception:
         pass
 
     return result
+
 
 def bring_window_to_front(process_name: str) -> bool:
     """Bring a window to the foreground"""
@@ -524,15 +565,16 @@ public class Win32Front {{
     stdout, stderr, code = run_powershell(script)
     return "brought to front" in stdout.lower()
 
+
 def move_window_to_monitor(process_name: str, monitor: str = "center") -> bool:
     """Move a window to specified monitor"""
     monitors = detect_monitors()
-    mon = monitors.get(monitor, monitors.get('primary', MONITORS['center']))
+    mon = monitors.get(monitor, monitors.get("primary", MONITORS["center"]))
 
-    x = mon['X'] + 50
-    y = mon['Y'] + 50
-    width = mon['Width'] - 100
-    height = mon['Height'] - 100
+    x = mon["X"] + 50
+    y = mon["Y"] + 50
+    width = mon["Width"] - 100
+    height = mon["Height"] - 100
 
     script = f"""
     Add-Type @'
@@ -556,6 +598,7 @@ public class Win32 {{
     stdout, stderr, code = run_powershell(script)
     return "moved" in stdout.lower()
 
+
 # MCP Tool Definitions
 @server.list_tools()
 async def list_tools() -> List[Tool]:
@@ -566,39 +609,31 @@ async def list_tools() -> List[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "URL to navigate to"
-                    },
+                    "url": {"type": "string", "description": "URL to navigate to"},
                     "monitor": {
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
                         "description": "Which monitor to open the browser on",
-                        "default": "center"
+                        "default": "center",
                     },
                     "browser": {
                         "type": "string",
                         "enum": ["chrome", "edge"],
                         "description": "Which browser to use (chrome or edge)",
-                        "default": "chrome"
-                    }
+                        "default": "chrome",
+                    },
                 },
-                "required": ["url"]
-            }
+                "required": ["url"],
+            },
         ),
         Tool(
             name="browser_navigate",
             description="Navigate the browser to a new URL",
             inputSchema={
                 "type": "object",
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "URL to navigate to"
-                    }
-                },
-                "required": ["url"]
-            }
+                "properties": {"url": {"type": "string", "description": "URL to navigate to"}},
+                "required": ["url"],
+            },
         ),
         Tool(
             name="browser_screenshot",
@@ -610,10 +645,10 @@ async def list_tools() -> List[Tool]:
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
                         "description": "Which monitor to screenshot",
-                        "default": "center"
+                        "default": "center",
                     }
-                }
-            }
+                },
+            },
         ),
         Tool(
             name="browser_click",
@@ -623,41 +658,36 @@ async def list_tools() -> List[Tool]:
                 "properties": {
                     "x": {
                         "type": "integer",
-                        "description": "X pixel coordinate from the screenshot"
+                        "description": "X pixel coordinate from the screenshot",
                     },
                     "y": {
                         "type": "integer",
-                        "description": "Y pixel coordinate from the screenshot"
+                        "description": "Y pixel coordinate from the screenshot",
                     },
                     "monitor": {
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
                         "description": "Which monitor the coordinates are from (must match the monitor used in browser_screenshot)",
-                        "default": "primary"
+                        "default": "primary",
                     },
                     "action": {
                         "type": "string",
                         "enum": ["click", "rightclick", "doubleclick", "move"],
                         "description": "Type of mouse action",
-                        "default": "click"
-                    }
+                        "default": "click",
+                    },
                 },
-                "required": ["x", "y"]
-            }
+                "required": ["x", "y"],
+            },
         ),
         Tool(
             name="browser_type",
             description="Type text using keyboard",
             inputSchema={
                 "type": "object",
-                "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "Text to type"
-                    }
-                },
-                "required": ["text"]
-            }
+                "properties": {"text": {"type": "string", "description": "Text to type"}},
+                "required": ["text"],
+            },
         ),
         Tool(
             name="browser_send_keys",
@@ -667,11 +697,11 @@ async def list_tools() -> List[Tool]:
                 "properties": {
                     "keys": {
                         "type": "string",
-                        "description": "Keys to send in AutoHotkey syntax. Modifiers: ^ (Ctrl), ! (Alt), + (Shift), # (Win). Special keys: {Enter}, {Tab}, {Escape}, {PgDn}, {PgUp}, {Home}, {End}, {Up}, {Down}, {Left}, {Right}, {F1}-{F12}, {Backspace}, {Delete}, {Space}. Combos: ^a (Ctrl+A), ^l (Ctrl+L). Repeat: {PgDn 3} sends PgDn 3 times."
+                        "description": "Keys to send in AutoHotkey syntax. Modifiers: ^ (Ctrl), ! (Alt), + (Shift), # (Win). Special keys: {Enter}, {Tab}, {Escape}, {PgDn}, {PgUp}, {Home}, {End}, {Up}, {Down}, {Left}, {Right}, {F1}-{F12}, {Backspace}, {Delete}, {Space}. Combos: ^a (Ctrl+A), ^l (Ctrl+L). Repeat: {PgDn 3} sends PgDn 3 times.",
                     }
                 },
-                "required": ["keys"]
-            }
+                "required": ["keys"],
+            },
         ),
         Tool(
             name="browser_scroll",
@@ -681,32 +711,32 @@ async def list_tools() -> List[Tool]:
                 "properties": {
                     "x": {
                         "type": "integer",
-                        "description": "X pixel coordinate from screenshot (where to scroll)"
+                        "description": "X pixel coordinate from screenshot (where to scroll)",
                     },
                     "y": {
                         "type": "integer",
-                        "description": "Y pixel coordinate from screenshot (where to scroll)"
+                        "description": "Y pixel coordinate from screenshot (where to scroll)",
                     },
                     "monitor": {
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
                         "description": "Which monitor the coordinates are from",
-                        "default": "primary"
+                        "default": "primary",
                     },
                     "direction": {
                         "type": "string",
                         "enum": ["up", "down"],
                         "description": "Scroll direction",
-                        "default": "down"
+                        "default": "down",
                     },
                     "clicks": {
                         "type": "integer",
                         "description": "Number of scroll steps (default 3, increase for faster scrolling)",
-                        "default": 3
-                    }
+                        "default": 3,
+                    },
                 },
-                "required": ["x", "y"]
-            }
+                "required": ["x", "y"],
+            },
         ),
         Tool(
             name="browser_search",
@@ -714,24 +744,21 @@ async def list_tools() -> List[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Search query"
-                    },
+                    "query": {"type": "string", "description": "Search query"},
                     "monitor": {
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
-                        "default": "center"
+                        "default": "center",
                     },
                     "browser": {
                         "type": "string",
                         "enum": ["chrome", "edge"],
                         "description": "Which browser to use",
-                        "default": "chrome"
-                    }
+                        "default": "chrome",
+                    },
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         ),
         Tool(
             name="window_move",
@@ -741,26 +768,24 @@ async def list_tools() -> List[Tool]:
                 "properties": {
                     "process_name": {
                         "type": "string",
-                        "description": "Name of the process (e.g., 'chrome', 'msedge', 'notepad')"
+                        "description": "Name of the process (e.g., 'chrome', 'msedge', 'notepad')",
                     },
                     "monitor": {
                         "type": "string",
                         "enum": ["left", "center", "right", "primary"],
-                        "default": "center"
-                    }
+                        "default": "center",
+                    },
                 },
-                "required": ["process_name"]
-            }
+                "required": ["process_name"],
+            },
         ),
         Tool(
             name="get_monitors",
             description="Get information about connected monitors",
-            inputSchema={
-                "type": "object",
-                "properties": {}
-            }
-        )
+            inputSchema={"type": "object", "properties": {}},
+        ),
     ]
+
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list:
@@ -778,15 +803,23 @@ async def call_tool(name: str, arguments: dict) -> list:
             screenshot_path, _, _ = take_screenshot(monitor)
 
             if screenshot_path and os.path.exists(screenshot_path):
-                with open(screenshot_path, 'rb') as f:
+                with open(screenshot_path, "rb") as f:
                     image_data = base64.b64encode(f.read()).decode()
 
                 return [
-                    TextContent(type="text", text=f"{browser.capitalize()} opened on {monitor} monitor, navigated to {url}"),
-                    ImageContent(type="image", data=image_data, mimeType="image/jpeg")
+                    TextContent(
+                        type="text",
+                        text=f"{browser.capitalize()} opened on {monitor} monitor, navigated to {url}",
+                    ),
+                    ImageContent(type="image", data=image_data, mimeType="image/jpeg"),
                 ]
             else:
-                return [TextContent(type="text", text=f"{browser.capitalize()} opened on {monitor} monitor, navigated to {url}")]
+                return [
+                    TextContent(
+                        type="text",
+                        text=f"{browser.capitalize()} opened on {monitor} monitor, navigated to {url}",
+                    )
+                ]
 
         elif name == "browser_navigate":
             url = arguments.get("url")
@@ -796,12 +829,12 @@ async def call_tool(name: str, arguments: dict) -> list:
             screenshot_path, _, _ = take_screenshot("center")
 
             if screenshot_path and os.path.exists(screenshot_path):
-                with open(screenshot_path, 'rb') as f:
+                with open(screenshot_path, "rb") as f:
                     image_data = base64.b64encode(f.read()).decode()
 
                 return [
                     TextContent(type="text", text=f"Navigated to {url}"),
-                    ImageContent(type="image", data=image_data, mimeType="image/jpeg")
+                    ImageContent(type="image", data=image_data, mimeType="image/jpeg"),
                 ]
             else:
                 return [TextContent(type="text", text=f"Navigated to {url}")]
@@ -811,12 +844,15 @@ async def call_tool(name: str, arguments: dict) -> list:
             screenshot_path, img_w, img_h = take_screenshot(monitor)
 
             if screenshot_path and os.path.exists(screenshot_path):
-                with open(screenshot_path, 'rb') as f:
+                with open(screenshot_path, "rb") as f:
                     image_data = base64.b64encode(f.read()).decode()
 
                 return [
-                    TextContent(type="text", text=f"Screenshot of {monitor} monitor ({img_w}x{img_h} pixels). Use browser_click with monitor=\"{monitor}\" and pixel coordinates from this image."),
-                    ImageContent(type="image", data=image_data, mimeType="image/jpeg")
+                    TextContent(
+                        type="text",
+                        text=f'Screenshot of {monitor} monitor ({img_w}x{img_h} pixels). Use browser_click with monitor="{monitor}" and pixel coordinates from this image.',
+                    ),
+                    ImageContent(type="image", data=image_data, mimeType="image/jpeg"),
                 ]
             else:
                 raise Exception("Failed to take screenshot")
@@ -830,11 +866,11 @@ async def call_tool(name: str, arguments: dict) -> list:
 
             diag = f"{action.capitalize()} at ({x}, {y}) on {monitor} monitor"
             diag += f" -> absolute ({result.get('target_x')}, {result.get('target_y')})"
-            if 'actual_x' in result:
+            if "actual_x" in result:
                 diag += f", cursor landed at ({result['actual_x']}, {result['actual_y']})"
-            if 'active_window' in result:
+            if "active_window" in result:
                 diag += f", active_window={result['active_window']}"
-            if not result.get('success'):
+            if not result.get("success"):
                 diag = "Click failed: " + diag
 
             return [TextContent(type="text", text=diag)]
@@ -850,11 +886,13 @@ async def call_tool(name: str, arguments: dict) -> list:
             result = send_keys(keys)
 
             diag = f"Sent keys: {keys}"
-            if result.get('window_before'):
+            if result.get("window_before"):
                 diag += f", window: {result['window_before']}"
-            if result.get('window_after') and result.get('window_after') != result.get('window_before'):
+            if result.get("window_after") and result.get("window_after") != result.get(
+                "window_before"
+            ):
                 diag += f" -> {result['window_after']}"
-            if not result.get('success'):
+            if not result.get("success"):
                 diag = "Send keys failed: " + diag
 
             return [TextContent(type="text", text=diag)]
@@ -869,9 +907,9 @@ async def call_tool(name: str, arguments: dict) -> list:
 
             diag = f"Scrolled {direction} {clicks}x at ({x}, {y}) on {monitor} monitor"
             diag += f" -> absolute ({result.get('target_x')}, {result.get('target_y')})"
-            if 'active_window' in result:
+            if "active_window" in result:
                 diag += f", active_window={result['active_window']}"
-            if not result.get('success'):
+            if not result.get("success"):
                 diag = "Scroll failed: " + diag
 
             return [TextContent(type="text", text=diag)]
@@ -888,12 +926,12 @@ async def call_tool(name: str, arguments: dict) -> list:
             screenshot_path, _, _ = take_screenshot(monitor)
 
             if screenshot_path and os.path.exists(screenshot_path):
-                with open(screenshot_path, 'rb') as f:
+                with open(screenshot_path, "rb") as f:
                     image_data = base64.b64encode(f.read()).decode()
 
                 return [
                     TextContent(type="text", text=f"Searched for: {query}"),
-                    ImageContent(type="image", data=image_data, mimeType="image/jpeg")
+                    ImageContent(type="image", data=image_data, mimeType="image/jpeg"),
                 ]
             else:
                 return [TextContent(type="text", text=f"Searched for: {query}")]
@@ -904,7 +942,14 @@ async def call_tool(name: str, arguments: dict) -> list:
 
             success = move_window_to_monitor(process_name, monitor)
 
-            return [TextContent(type="text", text=f"Moved {process_name} to {monitor} monitor" if success else f"Failed to move {process_name}")]
+            return [
+                TextContent(
+                    type="text",
+                    text=f"Moved {process_name} to {monitor} monitor"
+                    if success
+                    else f"Failed to move {process_name}",
+                )
+            ]
 
         elif name == "get_monitors":
             monitors = detect_monitors()
@@ -943,13 +988,13 @@ public class DpiInfo {
             dpi_out, _, _ = run_powershell(dpi_script)
             dpi_info = {}
             try:
-                parts = dpi_out.strip().split('|')
+                parts = dpi_out.strip().split("|")
                 dpi_info = {
                     "virtual_resolution": parts[0],
                     "physical_resolution": parts[1],
                     "dpi": int(parts[2]),
                     "scale_factor": round(int(parts[2]) / 96.0, 2),
-                    "coordinate_space": "virtual (all screenshot/click coords use this)"
+                    "coordinate_space": "virtual (all screenshot/click coords use this)",
                 }
             except Exception:
                 pass
@@ -963,10 +1008,13 @@ public class DpiInfo {
     except Exception as e:
         raise Exception(f"Error: {str(e)}")
 
+
 async def main():
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
+
 if __name__ == "__main__":
     import urllib.parse
+
     asyncio.run(main())

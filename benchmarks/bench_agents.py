@@ -103,6 +103,7 @@ _SAMPLE_REQUESTS = [
 # Parsing helpers
 # ---------------------------------------------------------------------------
 
+
 def _parse_md_agent(path: Path) -> dict:
     """
     Parse a markdown agent definition.
@@ -215,6 +216,7 @@ def _route_request(request: str, agents: list[dict]) -> Optional[str]:
 # Benchmarks
 # ---------------------------------------------------------------------------
 
+
 def bench_parse_all(verbose: bool = False) -> dict:
     """Time parsing of all agent definition files."""
     md_files = sorted(_AGENTS_DIR.glob("*.md"))
@@ -322,9 +324,7 @@ def bench_agent_inventory() -> dict:
     md_files = list(_AGENTS_DIR.glob("*.md"))
     yaml_files = list(_AGENTS_DIR.glob("*.yaml"))
 
-    stems = sorted(
-        [p.stem for p in md_files + yaml_files]
-    )
+    stems = sorted([p.stem for p in md_files + yaml_files])
 
     # Identify duplicates (same stem, different extension)
     all_stems = [p.stem for p in md_files + yaml_files]
@@ -347,22 +347,27 @@ def bench_agent_inventory() -> dict:
 # Suite runner
 # ---------------------------------------------------------------------------
 
+
 def run(verbose: bool = False) -> list[dict]:
     """Run all agent benchmarks. Returns list of result dicts."""
     results = []
 
     # --- Inventory ---
     inventory = bench_agent_inventory()
-    results.append({
-        "benchmark": "agent_inventory",
-        "label": f"Inventory {inventory['total']} agent files",
-        "total": inventory["total"],
-        "md": inventory["md_count"],
-        "yaml": inventory["yaml_count"],
-        "detail": inventory,
-    })
+    results.append(
+        {
+            "benchmark": "agent_inventory",
+            "label": f"Inventory {inventory['total']} agent files",
+            "total": inventory["total"],
+            "md": inventory["md_count"],
+            "yaml": inventory["yaml_count"],
+            "detail": inventory,
+        }
+    )
     if verbose:
-        print(f"  [inventory] {inventory['total']} agents ({inventory['md_count']} .md, {inventory['yaml_count']} .yaml)")
+        print(
+            f"  [inventory] {inventory['total']} agents ({inventory['md_count']} .md, {inventory['yaml_count']} .yaml)"
+        )
         if inventory["duplicate_stems"]:
             print(f"    Duplicates: {inventory['duplicate_stems']}")
 
@@ -373,16 +378,18 @@ def run(verbose: bool = False) -> list[dict]:
     # --- Parse all ---
     parse_res = bench_parse_all(verbose=verbose)
     agents = parse_res.pop("agents", [])
-    results.append({
-        "benchmark": "parse_all_agents",
-        "label": f"Parse {parse_res['total_files']} agent definitions",
-        "elapsed_s": parse_res["elapsed_s"],
-        "per_file_ms": parse_res["per_file_ms"],
-        "detail": parse_res,
-    })
+    results.append(
+        {
+            "benchmark": "parse_all_agents",
+            "label": f"Parse {parse_res['total_files']} agent definitions",
+            "elapsed_s": parse_res["elapsed_s"],
+            "per_file_ms": parse_res["per_file_ms"],
+            "detail": parse_res,
+        }
+    )
     if verbose:
         print(
-            f"  [parse_all] {parse_res['elapsed_s']*1000:.2f}ms total | "
+            f"  [parse_all] {parse_res['elapsed_s'] * 1000:.2f}ms total | "
             f"{parse_res['per_file_ms']:.3f}ms/file | "
             f"{parse_res['total_chars']:,} chars | "
             f"{parse_res['total_lines']:,} lines"
@@ -397,28 +404,34 @@ def run(verbose: bool = False) -> list[dict]:
 
     cold = parse_times[0]
     warm_avg = sum(parse_times[1:]) / len(parse_times[1:])
-    results.append({
-        "benchmark": "parse_cold_vs_warm",
-        "label": "Parse cold vs warm (OS file cache)",
-        "cold_ms": round(cold * 1000, 3),
-        "warm_avg_ms": round(warm_avg * 1000, 3),
-        "speedup": round(cold / max(warm_avg, 1e-9), 2),
-        "detail": {"cold_s": cold, "warm_avg_s": warm_avg, "runs": 5},
-    })
+    results.append(
+        {
+            "benchmark": "parse_cold_vs_warm",
+            "label": "Parse cold vs warm (OS file cache)",
+            "cold_ms": round(cold * 1000, 3),
+            "warm_avg_ms": round(warm_avg * 1000, 3),
+            "speedup": round(cold / max(warm_avg, 1e-9), 2),
+            "detail": {"cold_s": cold, "warm_avg_s": warm_avg, "runs": 5},
+        }
+    )
     if verbose:
-        print(f"  [cold_vs_warm] cold={cold*1000:.2f}ms | warm_avg={warm_avg*1000:.2f}ms | speedup={cold/max(warm_avg,1e-9):.1f}x")
+        print(
+            f"  [cold_vs_warm] cold={cold * 1000:.2f}ms | warm_avg={warm_avg * 1000:.2f}ms | speedup={cold / max(warm_avg, 1e-9):.1f}x"
+        )
 
     # --- Schema validation ---
     val_res = bench_validate_schemas(agents)
-    results.append({
-        "benchmark": "schema_validation",
-        "label": f"Validate {val_res['total_agents']} agent schemas",
-        "elapsed_s": val_res["elapsed_s"],
-        "valid": val_res["valid"],
-        "invalid": val_res["invalid"],
-        "total_errors": val_res["total_errors"],
-        "detail": val_res,
-    })
+    results.append(
+        {
+            "benchmark": "schema_validation",
+            "label": f"Validate {val_res['total_agents']} agent schemas",
+            "elapsed_s": val_res["elapsed_s"],
+            "valid": val_res["valid"],
+            "invalid": val_res["invalid"],
+            "total_errors": val_res["total_errors"],
+            "detail": val_res,
+        }
+    )
     if verbose:
         print(
             f"  [schema] {val_res['valid']}/{val_res['total_agents']} valid | "
@@ -432,15 +445,17 @@ def run(verbose: bool = False) -> list[dict]:
 
     # --- Dispatch routing ---
     routing_res = bench_dispatch_routing(agents, _SAMPLE_REQUESTS, runs=10)
-    results.append({
-        "benchmark": "dispatch_routing",
-        "label": f"Route {routing_res['total_route_calls']} requests across {len(agents)} agents",
-        "elapsed_s": routing_res["elapsed_s"],
-        "ops_per_s": routing_res["ops_per_s"],
-        "per_call_us": routing_res["per_call_us"],
-        "route_success_rate": routing_res["route_success_rate"],
-        "detail": routing_res,
-    })
+    results.append(
+        {
+            "benchmark": "dispatch_routing",
+            "label": f"Route {routing_res['total_route_calls']} requests across {len(agents)} agents",
+            "elapsed_s": routing_res["elapsed_s"],
+            "ops_per_s": routing_res["ops_per_s"],
+            "per_call_us": routing_res["per_call_us"],
+            "route_success_rate": routing_res["route_success_rate"],
+            "detail": routing_res,
+        }
+    )
     if verbose:
         print(
             f"  [routing] {routing_res['ops_per_s']:,} routes/s | "

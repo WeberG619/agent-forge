@@ -50,7 +50,7 @@ def detect_correction_intent(message: str) -> tuple:
             matched.append(pattern)
 
     # Also check for explicit correction keywords in short messages
-    explicit_keywords = ['wrong', 'incorrect', 'mistake', 'error', 'fix this', 'not right']
+    explicit_keywords = ["wrong", "incorrect", "mistake", "error", "fix this", "not right"]
     for keyword in explicit_keywords:
         if keyword in message_lower and len(message) < 200:
             if keyword not in matched:
@@ -69,7 +69,7 @@ def main():
     except (json.JSONDecodeError, Exception):
         sys.exit(0)
 
-    user_prompt = hook_input.get('user_prompt', '')
+    user_prompt = hook_input.get("user_prompt", "")
 
     if not user_prompt:
         sys.exit(0)

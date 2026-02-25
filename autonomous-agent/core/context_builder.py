@@ -151,11 +151,7 @@ class ContextBuilder:
 
         try:
             parts = self.calendar_command.split()
-            result = subprocess.run(
-                parts + ["today"],
-                capture_output=True,
-                timeout=30
-            )
+            result = subprocess.run(parts + ["today"], capture_output=True, timeout=30)
 
             if result.returncode == 0:
                 output = result.stdout.decode().strip()
@@ -175,11 +171,7 @@ class ContextBuilder:
 
         try:
             parts = self.calendar_command.split()
-            result = subprocess.run(
-                parts + ["upcoming", "5"],
-                capture_output=True,
-                timeout=30
-            )
+            result = subprocess.run(parts + ["upcoming", "5"], capture_output=True, timeout=30)
 
             if result.returncode == 0:
                 output = result.stdout.decode().strip()
@@ -228,6 +220,7 @@ class ContextBuilder:
         """Get pending background tasks."""
         try:
             from core.task_queue import TaskQueue
+
             queue = TaskQueue(self.config.get("queue_db", ""))
 
             pending = queue.get_all_pending()

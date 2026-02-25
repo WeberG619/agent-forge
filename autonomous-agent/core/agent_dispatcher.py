@@ -29,51 +29,46 @@ AGENT_REGISTRY = {
         "triggers": ["new_pdf", "new_document"],
         "prompt_template": "Analyze this file: {filepath}. Summarize its contents and identify any actionable items.",
         "timeout": 600,  # 10 minutes
-        "priority": "high"
+        "priority": "high",
     },
-
     "excel-reporter": {
         "description": "Process Excel files and generate reports",
         "triggers": ["new_excel"],
         "prompt_template": "Analyze this Excel file: {filepath}. Summarize the contents and identify any actionable data.",
         "timeout": 300,
-        "priority": "medium"
+        "priority": "medium",
     },
-
     # Communication Agents
     "client-liaison": {
         "description": "Handle client communications",
         "triggers": ["priority_email", "client_file"],
         "prompt_template": "A {event_type} from {contact_name}: {subject}. Draft an appropriate response or action plan.",
         "timeout": 300,
-        "priority": "high"
+        "priority": "high",
     },
-
     # Research Agents
     "tech-scout": {
         "description": "Research technology topics",
         "triggers": ["research_request", "tech_question"],
         "prompt_template": "Research: {topic}. Provide a summary of findings with actionable insights.",
         "timeout": 600,
-        "priority": "low"
+        "priority": "low",
     },
-
     # Development Agents
     "code-architect": {
         "description": "Design system architecture",
         "triggers": ["architecture_request", "design_needed"],
         "prompt_template": "Design: {requirement}. Output a clear architecture with components and interfaces.",
         "timeout": 600,
-        "priority": "medium"
+        "priority": "medium",
     },
-
     "python-engineer": {
         "description": "Write Python code",
         "triggers": ["python_task", "script_request"],
         "prompt_template": "Task: {task}. Write clean, well-documented Python code.",
         "timeout": 600,
-        "priority": "medium"
-    }
+        "priority": "medium",
+    },
 }
 
 # ============================================
@@ -87,11 +82,9 @@ TRIGGER_AGENT_MAP = {
     "new_pdf_other": ["client-liaison"],
     "new_excel": ["excel-reporter"],
     "new_client_file": ["client-liaison"],
-
     # Email triggers
     "priority_email_critical": ["client-liaison"],
     "priority_email_high": ["client-liaison"],
-
     # Manual triggers (from user commands)
     "research_request": ["tech-scout"],
     "code_request": ["code-architect", "python-engineer"],
@@ -101,6 +94,7 @@ TRIGGER_AGENT_MAP = {
 @dataclass
 class AgentResult:
     """Result from an agent execution."""
+
     agent_name: str
     success: bool
     output: str
@@ -116,6 +110,7 @@ class AgentResult:
 @dataclass
 class DispatchEvent:
     """An event that triggers agent dispatch."""
+
     trigger_type: str
     data: Dict
     priority: str = "medium"
@@ -125,6 +120,7 @@ class DispatchEvent:
 # ============================================
 # AGENT DISPATCHER
 # ============================================
+
 
 class AgentDispatcher:
     """
@@ -179,7 +175,7 @@ class AgentDispatcher:
                 agent_name=agent_name,
                 success=False,
                 output="",
-                error=f"Agent '{agent_name}' not found in registry"
+                error=f"Agent '{agent_name}' not found in registry",
             )
 
         agent_config = AGENT_REGISTRY[agent_name]
@@ -196,7 +192,7 @@ class AgentDispatcher:
             await self.notifier.send(
                 f"Agent Starting: {agent_name}",
                 f"Processing: {event.trigger_type}\n\n{self._summarize_event(event)}",
-                "low"
+                "low",
             )
 
         if self.on_agent_start:
@@ -211,10 +207,7 @@ class AgentDispatcher:
             duration = (datetime.now() - start_time).total_seconds()
 
             result = AgentResult(
-                agent_name=agent_name,
-                success=True,
-                output=output,
-                duration_seconds=duration
+                agent_name=agent_name, success=True, output=output, duration_seconds=duration
             )
 
             # Log execution
@@ -226,7 +219,7 @@ class AgentDispatcher:
                 await self.notifier.send(
                     f"Agent Complete: {agent_name}",
                     f"Duration: {duration:.1f}s\n\n{summary}",
-                    "medium"
+                    "medium",
                 )
 
             if self.on_agent_complete:
@@ -241,14 +234,14 @@ class AgentDispatcher:
                 success=False,
                 output="",
                 error=f"Agent timed out after {timeout} seconds",
-                duration_seconds=duration
+                duration_seconds=duration,
             )
 
             if self.notifier:
                 await self.notifier.send(
                     f"Agent Timeout: {agent_name}",
                     f"Agent did not complete within {timeout} seconds",
-                    "high"
+                    "high",
                 )
 
             if self.on_agent_error:
@@ -265,16 +258,14 @@ class AgentDispatcher:
                 success=False,
                 output="",
                 error=error_msg,
-                duration_seconds=duration
+                duration_seconds=duration,
             )
 
             logger.error(f"Agent {agent_name} failed: {error_msg}")
 
             if self.notifier:
                 await self.notifier.send(
-                    f"Agent Failed: {agent_name}",
-                    f"Error: {error_msg}",
-                    "high"
+                    f"Agent Failed: {agent_name}", f"Error: {error_msg}", "high"
                 )
 
             if self.on_agent_error:
@@ -286,17 +277,17 @@ class AgentDispatcher:
         """Execute prompt via Claude Code CLI."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                'claude', '-p', prompt,
-                '--output-format', 'text',
-                '--dangerously-skip-permissions',
+                "claude",
+                "-p",
+                prompt,
+                "--output-format",
+                "text",
+                "--dangerously-skip-permissions",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=timeout
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
 
             output = stdout.decode().strip()
 
@@ -338,7 +329,7 @@ class AgentDispatcher:
             "trigger": event.trigger_type,
             "success": result.success,
             "duration": result.duration_seconds,
-            "error": result.error
+            "error": result.error,
         }
         self.execution_log.append(entry)
 
@@ -368,12 +359,13 @@ class AgentDispatcher:
             "total": total,
             "successful": successful,
             "success_rate": successful / total if total > 0 else 0,
-            "by_agent": by_agent
+            "by_agent": by_agent,
         }
 
 
 class SafeDict(dict):
     """Dict that returns placeholder for missing keys."""
+
     def __missing__(self, key):
         return f"[{key}]"
 
@@ -381,6 +373,7 @@ class SafeDict(dict):
 # ============================================
 # CONVENIENCE FUNCTIONS
 # ============================================
+
 
 async def dispatch_to_agent(trigger_type: str, data: Dict, notifier=None) -> list:
     """
@@ -411,6 +404,7 @@ async def execute_single_agent(agent_name: str, data: Dict, notifier=None) -> Ag
 # ============================================
 
 if __name__ == "__main__":
+
     async def test():
         print("Testing Agent Dispatcher...")
 
@@ -421,7 +415,9 @@ if __name__ == "__main__":
 
         # Test prompt building
         template = "Process file: {filepath} from {source}"
-        result = dispatcher._build_prompt(template, {"filepath": "/test.pdf", "source": "Downloads"})
+        result = dispatcher._build_prompt(
+            template, {"filepath": "/test.pdf", "source": "Downloads"}
+        )
         print(f"Built prompt: {result}")
 
         print("Agent Dispatcher test complete")

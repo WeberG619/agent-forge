@@ -37,6 +37,7 @@ try:
     from mcp.types import Tool, TextContent
 except ImportError:
     import subprocess
+
     subprocess.run([sys.executable, "-m", "pip", "install", "mcp", "-q"])
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
@@ -80,10 +81,7 @@ def telegram_api(method: str, params: dict = None) -> dict:
 
     if params:
         data = json.dumps(params).encode("utf-8")
-        req = urllib.request.Request(
-            url, data=data,
-            headers={"Content-Type": "application/json"}
-        )
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     else:
         req = urllib.request.Request(url)
 
@@ -111,9 +109,7 @@ def telegram_api_multipart(method: str, fields: dict, file_field: str, file_path
     for key, value in fields.items():
         if value is not None:
             body_parts.append(
-                f"--{boundary}\r\n"
-                f'Content-Disposition: form-data; name="{key}"\r\n\r\n'
-                f"{value}\r\n"
+                f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'
             )
 
     # Add file
@@ -144,9 +140,10 @@ def telegram_api_multipart(method: str, fields: dict, file_field: str, file_path
     body = text_part + file_header.encode("utf-8") + file_data + file_footer.encode("utf-8")
 
     req = urllib.request.Request(
-        url, data=body,
+        url,
+        data=body,
         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
-        method="POST"
+        method="POST",
     )
 
     try:
@@ -164,8 +161,14 @@ def is_url(s: str) -> bool:
     return s.startswith("http://") or s.startswith("https://")
 
 
-def send_media(method: str, chat_id, media_field: str, media_source: str,
-               caption: str = None, parse_mode: str = None) -> dict:
+def send_media(
+    method: str,
+    chat_id,
+    media_field: str,
+    media_source: str,
+    caption: str = None,
+    parse_mode: str = None,
+) -> dict:
     """Send media (video, photo, document, animation) via Telegram.
 
     Supports both URLs and local file paths.
@@ -340,17 +343,33 @@ def _media_response(result: dict, chat_id, media_type: str) -> list:
     """Build a standard response for media send operations."""
     if result.get("ok"):
         msg = result["result"]
-        return [TextContent(type="text", text=json.dumps({
-            "success": True,
-            "message_id": msg.get("message_id"),
-            "chat_id": chat_id,
-            "media_type": media_type,
-            "timestamp": datetime.now().isoformat(),
-        }, indent=2))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "success": True,
+                        "message_id": msg.get("message_id"),
+                        "chat_id": chat_id,
+                        "media_type": media_type,
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                    indent=2,
+                ),
+            )
+        ]
     else:
-        return [TextContent(type="text", text=json.dumps({
-            "error": result.get("description", f"Failed to send {media_type}"),
-        }, indent=2))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "error": result.get("description", f"Failed to send {media_type}"),
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
 
 @server.call_tool()
@@ -361,21 +380,37 @@ async def call_tool(name: str, arguments: dict):
         result = telegram_api("getMe")
         if result.get("ok"):
             bot = result["result"]
-            return [TextContent(type="text", text=json.dumps({
-                "status": "connected",
-                "bot_name": bot.get("first_name", ""),
-                "bot_username": bot.get("username", ""),
-                "bot_id": bot.get("id"),
-                "can_read_messages": not bot.get("is_bot", True) or True,
-                "supported_media": ["video", "photo", "document", "animation"],
-                "instructions": "Send a message to your bot on Telegram to start chatting.",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "connected",
+                            "bot_name": bot.get("first_name", ""),
+                            "bot_username": bot.get("username", ""),
+                            "bot_id": bot.get("id"),
+                            "can_read_messages": not bot.get("is_bot", True) or True,
+                            "supported_media": ["video", "photo", "document", "animation"],
+                            "instructions": "Send a message to your bot on Telegram to start chatting.",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
         else:
-            return [TextContent(type="text", text=json.dumps({
-                "status": "error",
-                "error": result.get("description", "Unknown error"),
-                "instructions": "Check your TELEGRAM_BOT_TOKEN or config.json",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "error",
+                            "error": result.get("description", "Unknown error"),
+                            "instructions": "Check your TELEGRAM_BOT_TOKEN or config.json",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
     elif name == "telegram_send_message":
         chat_id = arguments.get("chat_id")
@@ -383,28 +418,55 @@ async def call_tool(name: str, arguments: dict):
         parse_mode = arguments.get("parse_mode", "Markdown")
 
         if not check_chat_allowed(chat_id):
-            return [TextContent(type="text", text=json.dumps({
-                "error": f"Chat {chat_id} not in allowed list",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Chat {chat_id} not in allowed list",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
-        result = telegram_api("sendMessage", {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": parse_mode,
-        })
+        result = telegram_api(
+            "sendMessage",
+            {
+                "chat_id": chat_id,
+                "text": text,
+                "parse_mode": parse_mode,
+            },
+        )
 
         if result.get("ok"):
             msg = result["result"]
-            return [TextContent(type="text", text=json.dumps({
-                "success": True,
-                "message_id": msg.get("message_id"),
-                "chat_id": chat_id,
-                "timestamp": datetime.now().isoformat(),
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "success": True,
+                            "message_id": msg.get("message_id"),
+                            "chat_id": chat_id,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
         else:
-            return [TextContent(type="text", text=json.dumps({
-                "error": result.get("description", "Send failed"),
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": result.get("description", "Send failed"),
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
     elif name == "telegram_send_video":
         chat_id = arguments.get("chat_id")
@@ -413,9 +475,17 @@ async def call_tool(name: str, arguments: dict):
         parse_mode = arguments.get("parse_mode")
 
         if not check_chat_allowed(chat_id):
-            return [TextContent(type="text", text=json.dumps({
-                "error": f"Chat {chat_id} not in allowed list",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Chat {chat_id} not in allowed list",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         result = send_media("sendVideo", chat_id, "video", video, caption, parse_mode)
         return _media_response(result, chat_id, "video")
@@ -427,9 +497,17 @@ async def call_tool(name: str, arguments: dict):
         parse_mode = arguments.get("parse_mode")
 
         if not check_chat_allowed(chat_id):
-            return [TextContent(type="text", text=json.dumps({
-                "error": f"Chat {chat_id} not in allowed list",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Chat {chat_id} not in allowed list",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         result = send_media("sendPhoto", chat_id, "photo", photo, caption, parse_mode)
         return _media_response(result, chat_id, "photo")
@@ -441,9 +519,17 @@ async def call_tool(name: str, arguments: dict):
         parse_mode = arguments.get("parse_mode")
 
         if not check_chat_allowed(chat_id):
-            return [TextContent(type="text", text=json.dumps({
-                "error": f"Chat {chat_id} not in allowed list",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Chat {chat_id} not in allowed list",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         result = send_media("sendDocument", chat_id, "document", document, caption, parse_mode)
         return _media_response(result, chat_id, "document")
@@ -455,9 +541,17 @@ async def call_tool(name: str, arguments: dict):
         parse_mode = arguments.get("parse_mode")
 
         if not check_chat_allowed(chat_id):
-            return [TextContent(type="text", text=json.dumps({
-                "error": f"Chat {chat_id} not in allowed list",
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": f"Chat {chat_id} not in allowed list",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         result = send_media("sendAnimation", chat_id, "animation", animation, caption, parse_mode)
         return _media_response(result, chat_id, "animation")
@@ -472,9 +566,17 @@ async def call_tool(name: str, arguments: dict):
         result = telegram_api("getUpdates", params)
 
         if not result.get("ok"):
-            return [TextContent(type="text", text=json.dumps({
-                "error": result.get("description", "Failed to get updates"),
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": result.get("description", "Failed to get updates"),
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         updates = result.get("result", [])
         messages = []
@@ -483,21 +585,31 @@ async def call_tool(name: str, arguments: dict):
             _last_update_id = max(_last_update_id, update.get("update_id", 0))
             msg = update.get("message", {})
             if msg:
-                messages.append({
-                    "from": msg.get("from", {}).get("first_name", "Unknown"),
-                    "from_id": msg.get("from", {}).get("id"),
-                    "chat_id": msg.get("chat", {}).get("id"),
-                    "chat_type": msg.get("chat", {}).get("type", "private"),
-                    "text": msg.get("text", ""),
-                    "date": datetime.fromtimestamp(
-                        msg.get("date", 0)
-                    ).isoformat() if msg.get("date") else None,
-                })
+                messages.append(
+                    {
+                        "from": msg.get("from", {}).get("first_name", "Unknown"),
+                        "from_id": msg.get("from", {}).get("id"),
+                        "chat_id": msg.get("chat", {}).get("id"),
+                        "chat_type": msg.get("chat", {}).get("type", "private"),
+                        "text": msg.get("text", ""),
+                        "date": datetime.fromtimestamp(msg.get("date", 0)).isoformat()
+                        if msg.get("date")
+                        else None,
+                    }
+                )
 
-        return [TextContent(type="text", text=json.dumps({
-            "count": len(messages),
-            "messages": messages,
-        }, indent=2))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "count": len(messages),
+                        "messages": messages,
+                    },
+                    indent=2,
+                ),
+            )
+        ]
 
     elif name == "telegram_get_chat_info":
         chat_id = arguments.get("chat_id")
@@ -519,9 +631,17 @@ async def call_tool(name: str, arguments: dict):
                     info["member_count"] = count_result["result"]
             return [TextContent(type="text", text=json.dumps(info, indent=2))]
         else:
-            return [TextContent(type="text", text=json.dumps({
-                "error": result.get("description", "Chat not found"),
-            }, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "error": result.get("description", "Chat not found"),
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
     return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
@@ -537,9 +657,14 @@ async def main():
             bot = result["result"]
             print(f"[Telegram MCP] Connected as @{bot.get('username', '?')}", file=sys.stderr)
         else:
-            print(f"[Telegram MCP] Token validation failed: {result.get('description')}", file=sys.stderr)
+            print(
+                f"[Telegram MCP] Token validation failed: {result.get('description')}",
+                file=sys.stderr,
+            )
     else:
-        print("[Telegram MCP] No token - tools will return errors until configured", file=sys.stderr)
+        print(
+            "[Telegram MCP] No token - tools will return errors until configured", file=sys.stderr
+        )
 
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())

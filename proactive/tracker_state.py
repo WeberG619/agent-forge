@@ -29,14 +29,14 @@ class TrackerState:
         self._lock = threading.Lock()
         self._state_file = state_file or STATE_FILE
         self._state: Dict[str, Any] = {
-            "reminded_events": {},      # event_id -> reminded_at ISO timestamp
-            "notified_emails": {},      # email_id -> notified_at ISO timestamp
-            "service_failures": {},     # service_name -> {"count": N, "last_failure": ISO}
-            "cooldowns": {},            # key -> last_triggered ISO timestamp
-            "last_briefing_date": None, # "YYYY-MM-DD"
+            "reminded_events": {},  # event_id -> reminded_at ISO timestamp
+            "notified_emails": {},  # email_id -> notified_at ISO timestamp
+            "service_failures": {},  # service_name -> {"count": N, "last_failure": ISO}
+            "cooldowns": {},  # key -> last_triggered ISO timestamp
+            "last_briefing_date": None,  # "YYYY-MM-DD"
             "last_evening_date": None,  # "YYYY-MM-DD"
             "last_weekly_overview_date": None,  # "YYYY-MM-DD"
-            "last_weekly_recap_date": None,     # "YYYY-MM-DD"
+            "last_weekly_recap_date": None,  # "YYYY-MM-DD"
         }
         self._load()
 

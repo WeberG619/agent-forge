@@ -75,8 +75,17 @@ def _open_db(path: str) -> sqlite3.Connection:
 _PROJECTS = ["cadre-ai", "revit-bridge", "devops", "general", "market-analysis"]
 _MEMORY_TYPES = ["context", "correction", "insight", "pattern", "known-good"]
 _TAGS_POOL = [
-    "filesystem", "git", "deployment", "correction", "common-sense",
-    "identity", "network", "execution", "scope", "known-good", "seed",
+    "filesystem",
+    "git",
+    "deployment",
+    "correction",
+    "common-sense",
+    "identity",
+    "network",
+    "execution",
+    "scope",
+    "known-good",
+    "seed",
 ]
 _CONTENT_TEMPLATES = [
     "CORRECTION [{sev}]: {action}\nWrong: {wrong}\nRight: {right}\nDomain: {domain}",
@@ -87,12 +96,24 @@ _CONTENT_TEMPLATES = [
 ]
 
 _ACTIONS = [
-    "deploy to /opt/app", "run git reset --hard", "delete all temp files",
-    "push to main branch", "send email to user", "drop database table",
-    "overwrite config file", "truncate logs", "publish release",
-    "merge feature branch", "commit secrets to repo", "rm -rf build/",
-    "update dependency versions", "read file before editing", "backup database",
-    "validate schema before write", "check path exists", "confirm deployment target",
+    "deploy to /opt/app",
+    "run git reset --hard",
+    "delete all temp files",
+    "push to main branch",
+    "send email to user",
+    "drop database table",
+    "overwrite config file",
+    "truncate logs",
+    "publish release",
+    "merge feature branch",
+    "commit secrets to repo",
+    "rm -rf build/",
+    "update dependency versions",
+    "read file before editing",
+    "backup database",
+    "validate schema before write",
+    "check path exists",
+    "confirm deployment target",
 ]
 
 _DOMAINS = ["filesystem", "git", "network", "execution", "scope", "deployment", "data", "identity"]
@@ -125,6 +146,7 @@ def _random_content(idx: int) -> tuple[str, str, str, str, int, str]:
 # ---------------------------------------------------------------------------
 # Individual benchmarks
 # ---------------------------------------------------------------------------
+
 
 def bench_store(conn: sqlite3.Connection, count: int) -> dict:
     """Insert `count` memories and measure wall time."""
@@ -201,7 +223,9 @@ def bench_fts5_search(conn: sqlite3.Connection, query: str, runs: int = 20) -> d
     }
 
 
-def bench_engram_cache(conn: sqlite3.Connection, hot_set_size: int = 50, total_queries: int = 200) -> dict:
+def bench_engram_cache(
+    conn: sqlite3.Connection, hot_set_size: int = 50, total_queries: int = 200
+) -> dict:
     """
     Simulate an engram cache: a hot set of recently-accessed memory IDs
     are re-queried by rowid (O(1) PK lookup). Measures hit/miss ratio
@@ -210,7 +234,9 @@ def bench_engram_cache(conn: sqlite3.Connection, hot_set_size: int = 50, total_q
     'hit' = rowid in hot set (fast PK lookup)
     'miss' = rowid not in hot set (full scan fallback)
     """
-    all_ids = [r[0] for r in conn.execute("SELECT id FROM memories ORDER BY RANDOM() LIMIT 500").fetchall()]
+    all_ids = [
+        r[0] for r in conn.execute("SELECT id FROM memories ORDER BY RANDOM() LIMIT 500").fetchall()
+    ]
     if len(all_ids) < hot_set_size:
         hot_set_size = max(1, len(all_ids) // 2)
 
@@ -274,6 +300,7 @@ def bench_db_size(db_path: str) -> dict:
 # Suite runner
 # ---------------------------------------------------------------------------
 
+
 def run(verbose: bool = False) -> list[dict]:
     """Run all memory benchmarks. Returns list of result dicts."""
     results = []
@@ -292,64 +319,89 @@ def run(verbose: bool = False) -> list[dict]:
             # --- Store benchmark ---
             store_res = bench_store(conn, batch)
             current_count = store_res["total_rows"]
-            results.append({
-                "benchmark": f"store_{tier}",
-                "label": f"Insert {batch} rows (total {current_count})",
-                "elapsed_s": store_res["elapsed_s"],
-                "ops_per_s": store_res["ops_per_s"],
-                "detail": store_res,
-            })
+            results.append(
+                {
+                    "benchmark": f"store_{tier}",
+                    "label": f"Insert {batch} rows (total {current_count})",
+                    "elapsed_s": store_res["elapsed_s"],
+                    "ops_per_s": store_res["ops_per_s"],
+                    "detail": store_res,
+                }
+            )
             if verbose:
-                print(f"  [store_{tier}] {store_res['elapsed_s']:.4f}s | {store_res['ops_per_s']:,} ops/s")
+                print(
+                    f"  [store_{tier}] {store_res['elapsed_s']:.4f}s | {store_res['ops_per_s']:,} ops/s"
+                )
 
             # --- Keyword recall ---
             kw = random.choice(["CORRECTION", "deployment", "git", "filesystem", "delete"])
             kw_res = bench_keyword_recall(conn, kw)
-            results.append({
-                "benchmark": f"keyword_recall_{tier}",
-                "label": f"Keyword recall '{kw}' at {current_count} rows",
-                "elapsed_s": kw_res["avg_s"],
-                "detail": kw_res,
-            })
+            results.append(
+                {
+                    "benchmark": f"keyword_recall_{tier}",
+                    "label": f"Keyword recall '{kw}' at {current_count} rows",
+                    "elapsed_s": kw_res["avg_s"],
+                    "detail": kw_res,
+                }
+            )
             if verbose:
-                print(f"  [keyword_{tier}] avg {kw_res['avg_s']*1000:.2f}ms | {kw_res['results_returned']} results")
+                print(
+                    f"  [keyword_{tier}] avg {kw_res['avg_s'] * 1000:.2f}ms | {kw_res['results_returned']} results"
+                )
 
             # --- FTS5 search ---
-            fts_queries = ["correct approach", "deployment target", "git reset", "filesystem delete"]
+            fts_queries = [
+                "correct approach",
+                "deployment target",
+                "git reset",
+                "filesystem delete",
+            ]
             fts_query = random.choice(fts_queries)
             fts_res = bench_fts5_search(conn, fts_query)
-            results.append({
-                "benchmark": f"fts5_search_{tier}",
-                "label": f"FTS5 '{fts_query}' at {current_count} rows",
-                "elapsed_s": fts_res["avg_s"],
-                "detail": fts_res,
-            })
+            results.append(
+                {
+                    "benchmark": f"fts5_search_{tier}",
+                    "label": f"FTS5 '{fts_query}' at {current_count} rows",
+                    "elapsed_s": fts_res["avg_s"],
+                    "detail": fts_res,
+                }
+            )
             if verbose:
-                print(f"  [fts5_{tier}] avg {fts_res['avg_s']*1000:.2f}ms | {fts_res['results_returned']} results")
+                print(
+                    f"  [fts5_{tier}] avg {fts_res['avg_s'] * 1000:.2f}ms | {fts_res['results_returned']} results"
+                )
 
             # --- Engram cache ---
             cache_res = bench_engram_cache(conn)
-            results.append({
-                "benchmark": f"engram_cache_{tier}",
-                "label": f"Engram cache simulation at {current_count} rows",
-                "elapsed_s": cache_res["avg_hit_s"],
-                "hit_ratio": cache_res["hit_ratio"],
-                "detail": cache_res,
-            })
+            results.append(
+                {
+                    "benchmark": f"engram_cache_{tier}",
+                    "label": f"Engram cache simulation at {current_count} rows",
+                    "elapsed_s": cache_res["avg_hit_s"],
+                    "hit_ratio": cache_res["hit_ratio"],
+                    "detail": cache_res,
+                }
+            )
             if verbose:
-                print(f"  [cache_{tier}] hit_ratio={cache_res['hit_ratio']:.1%} | hit={cache_res['avg_hit_s']*1000:.3f}ms | miss={cache_res['avg_miss_s']*1000:.3f}ms")
+                print(
+                    f"  [cache_{tier}] hit_ratio={cache_res['hit_ratio']:.1%} | hit={cache_res['avg_hit_s'] * 1000:.3f}ms | miss={cache_res['avg_miss_s'] * 1000:.3f}ms"
+                )
 
             # --- DB size ---
             size_res = bench_db_size(db_path)
-            results.append({
-                "benchmark": f"db_size_{tier}",
-                "label": f"DB size at {current_count} rows",
-                "size_kb": size_res["size_kb"],
-                "bytes_per_row": size_res["bytes_per_row"],
-                "detail": size_res,
-            })
+            results.append(
+                {
+                    "benchmark": f"db_size_{tier}",
+                    "label": f"DB size at {current_count} rows",
+                    "size_kb": size_res["size_kb"],
+                    "bytes_per_row": size_res["bytes_per_row"],
+                    "detail": size_res,
+                }
+            )
             if verbose:
-                print(f"  [db_size_{tier}] {size_res['size_kb']} KB | {size_res['bytes_per_row']} bytes/row")
+                print(
+                    f"  [db_size_{tier}] {size_res['size_kb']} KB | {size_res['bytes_per_row']} bytes/row"
+                )
 
         conn.close()
 

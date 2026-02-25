@@ -39,15 +39,17 @@ IS_WINDOWS = platform.system() == "Windows" or "microsoft" in platform.release()
 
 
 def setup_logging():
-    logger = logging.getLogger('claude_daemon')
+    logger = logging.getLogger("claude_daemon")
     logger.setLevel(logging.INFO)
     BASE_DIR.mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler(LOG_FILE, maxBytes=MAX_LOG_SIZE, backupCount=LOG_BACKUP_COUNT)
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    file_handler = RotatingFileHandler(
+        LOG_FILE, maxBytes=MAX_LOG_SIZE, backupCount=LOG_BACKUP_COUNT
+    )
+    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(file_handler)
-    if '--console' in sys.argv:
+    if "--console" in sys.argv:
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        console_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         logger.addHandler(console_handler)
     return logger
 
@@ -73,7 +75,9 @@ class SystemState:
             "active_window": self.active_window,
             "monitors": self.monitors,
             "system": self.system_info,
-            "clipboard_preview": self.clipboard[:100] + "..." if len(self.clipboard) > 100 else self.clipboard,
+            "clipboard_preview": self.clipboard[:100] + "..."
+            if len(self.clipboard) > 100
+            else self.clipboard,
             "recent_files": self.recent_files,
             "applications": self.applications,
             "recent_events": self.events[-20:],
@@ -104,7 +108,7 @@ class ClaudeDaemon:
 
     def _write_pid_file(self):
         try:
-            with open(PID_FILE, 'w') as f:
+            with open(PID_FILE, "w") as f:
                 f.write(str(os.getpid()))
         except Exception as e:
             logger.error(f"Could not write PID file: {e}")
@@ -114,8 +118,20 @@ class ClaudeDaemon:
         try:
             ps_exe = "powershell.exe" if "microsoft" in platform.release().lower() else "powershell"
             result = subprocess.run(
-                [ps_exe, '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-Command', cmd],
-                capture_output=True, text=True, timeout=timeout,
+                [
+                    ps_exe,
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-WindowStyle",
+                    "Hidden",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-Command",
+                    cmd,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
             )
             return result.stdout.strip() if result.stdout else None
         except Exception as e:
@@ -132,11 +148,11 @@ class ClaudeDaemon:
             return self._get_apps_linux()
 
     def _get_apps_windows(self) -> List[Dict]:
-        ps_cmd = '''
+        ps_cmd = """
 Get-Process | Where-Object {$_.MainWindowTitle -ne ""} | ForEach-Object {
     @{ProcessName=$_.ProcessName; MainWindowTitle=$_.MainWindowTitle; Id=$_.Id}
 } | ConvertTo-Json -Compress
-'''
+"""
         output = self._run_powershell(ps_cmd, timeout=15)
         if output:
             try:
@@ -151,11 +167,17 @@ Get-Process | Where-Object {$_.MainWindowTitle -ne ""} | ForEach-Object {
     def _get_apps_macos(self) -> List[Dict]:
         try:
             result = subprocess.run(
-                ['osascript', '-e', 'tell application "System Events" to get name of every process whose visible is true'],
-                capture_output=True, text=True, timeout=5
+                [
+                    "osascript",
+                    "-e",
+                    'tell application "System Events" to get name of every process whose visible is true',
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.stdout:
-                names = [n.strip() for n in result.stdout.split(',')]
+                names = [n.strip() for n in result.stdout.split(",")]
                 return [{"ProcessName": n, "MainWindowTitle": n} for n in names]
         except Exception:
             pass
@@ -163,12 +185,10 @@ Get-Process | Where-Object {$_.MainWindowTitle -ne ""} | ForEach-Object {
 
     def _get_apps_linux(self) -> List[Dict]:
         try:
-            result = subprocess.run(
-                ['wmctrl', '-l'], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["wmctrl", "-l"], capture_output=True, text=True, timeout=5)
             if result.stdout:
                 apps = []
-                for line in result.stdout.strip().split('\n'):
+                for line in result.stdout.strip().split("\n"):
                     parts = line.split(None, 3)
                     if len(parts) >= 4:
                         apps.append({"ProcessName": parts[2], "MainWindowTitle": parts[3]})
@@ -179,25 +199,34 @@ Get-Process | Where-Object {$_.MainWindowTitle -ne ""} | ForEach-Object {
 
     def get_active_window(self) -> str:
         if IS_WINDOWS:
-            return self._run_powershell('''
+            return (
+                self._run_powershell(
+                    """
 Add-Type @"
 using System;using System.Runtime.InteropServices;using System.Text;
 public class Win32{[DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();
 [DllImport("user32.dll")]public static extern int GetWindowText(IntPtr hWnd,StringBuilder text,int count);}
 "@
 $h=[Win32]::GetForegroundWindow();$t=New-Object System.Text.StringBuilder 256;[Win32]::GetWindowText($h,$t,256)|Out-Null;$t.ToString()
-''', timeout=5) or ""
+""",
+                    timeout=5,
+                )
+                or ""
+            )
         return ""
 
     def get_system_info(self) -> Dict:
         if IS_WINDOWS:
-            output = self._run_powershell(r'''
+            output = self._run_powershell(
+                r"""
 $mem=Get-CimInstance Win32_OperatingSystem
 $memUsed=[math]::Round(($mem.TotalVisibleMemorySize-$mem.FreePhysicalMemory)/1MB,1)
 $memTotal=[math]::Round($mem.TotalVisibleMemorySize/1MB,1)
 $memPct=[math]::Round((($mem.TotalVisibleMemorySize-$mem.FreePhysicalMemory)/$mem.TotalVisibleMemorySize)*100,0)
 @{memory_used_gb=$memUsed;memory_total_gb=$memTotal;memory_percent=$memPct}|ConvertTo-Json -Compress
-''', timeout=15)
+""",
+                timeout=15,
+            )
             if output:
                 try:
                     return json.loads(output)
@@ -207,22 +236,33 @@ $memPct=[math]::Round((($mem.TotalVisibleMemorySize-$mem.FreePhysicalMemory)/$me
 
     def get_clipboard_text(self) -> str:
         if IS_WINDOWS:
-            return self._run_powershell('''
+            return (
+                self._run_powershell(
+                    """
 Add-Type -AssemblyName System.Windows.Forms
 $c=[System.Windows.Forms.Clipboard]::GetText()
 if($c.Length -gt 500){$c=$c.Substring(0,500)+"..."}
 $c
-''', timeout=3) or ""
+""",
+                    timeout=3,
+                )
+                or ""
+            )
         return ""
 
     def get_recent_files(self) -> List[str]:
         if IS_WINDOWS:
-            output = self._run_powershell(r'''
+            output = self._run_powershell(
+                r"""
 $r=[Environment]::GetFolderPath("Recent")
 if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWriteTime -Desc|Select -First 10|%{$_.BaseName}}
-''', timeout=5)
+""",
+                timeout=5,
+            )
             if output:
-                return [f.strip() for f in output.split('\n') if f.strip() and not f.startswith('$')]
+                return [
+                    f.strip() for f in output.split("\n") if f.strip() and not f.startswith("$")
+                ]
         return []
 
     def log_event(self, event_type: str, details: str):
@@ -231,8 +271,8 @@ if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWr
         if len(self.state.events) > 100:
             self.state.events = self.state.events[-100:]
         try:
-            with open(EVENT_LOG, 'a') as f:
-                f.write(json.dumps(event) + '\n')
+            with open(EVENT_LOG, "a") as f:
+                f.write(json.dumps(event) + "\n")
         except Exception:
             pass
 
@@ -270,8 +310,8 @@ if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWr
 
     def save_state(self):
         try:
-            temp_file = STATE_FILE.with_suffix('.tmp')
-            with open(temp_file, 'w') as f:
+            temp_file = STATE_FILE.with_suffix(".tmp")
+            with open(temp_file, "w") as f:
                 json.dump(self.state.to_dict(), f, indent=2)
             temp_file.replace(STATE_FILE)
         except Exception as e:
@@ -288,7 +328,7 @@ if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWr
             "tracked_apps": len(self.state.applications),
         }
         try:
-            with open(HEALTH_FILE, 'w') as f:
+            with open(HEALTH_FILE, "w") as f:
                 json.dump(health, f, indent=2)
         except Exception:
             pass
@@ -306,7 +346,9 @@ if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWr
             try:
                 time.sleep(UPDATE_INTERVAL)
                 self.update_state()
-                if (datetime.now() - self.last_health_check).total_seconds() >= HEALTH_CHECK_INTERVAL:
+                if (
+                    datetime.now() - self.last_health_check
+                ).total_seconds() >= HEALTH_CHECK_INTERVAL:
                     self.health_check()
             except KeyboardInterrupt:
                 self.running = False
@@ -323,14 +365,14 @@ if(Test-Path $r){Get-ChildItem $r -Filter *.lnk -EA SilentlyContinue|Sort LastWr
 
 
 def main():
-    if '--status' in sys.argv:
+    if "--status" in sys.argv:
         if PID_FILE.exists():
             print(f"Daemon PID: {PID_FILE.read_text().strip()}")
         else:
             print("Daemon is not running")
         return
 
-    if '--stop' in sys.argv:
+    if "--stop" in sys.argv:
         if PID_FILE.exists():
             pid = int(PID_FILE.read_text().strip())
             try:

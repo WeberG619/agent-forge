@@ -41,25 +41,20 @@ CONFIG = {
     "live_state_file": os.getenv("AGENT_STATE_FILE", ""),
     "log_dir": str(BASE_DIR / "logs"),
     "queue_db": str(BASE_DIR / "queues" / "tasks.db"),
-
     # Calendar command (optional - set to your calendar CLI tool)
     # Example: "python3 /path/to/calendar_client.py"
     "calendar_command": os.getenv("AGENT_CALENDAR_COMMAND", ""),
-
     # Timing (seconds)
-    "watch_interval": 30,           # How often to check system state
+    "watch_interval": 30,  # How often to check system state
     "calendar_check_interval": 300,  # Check calendar every 5 min
-    "task_process_interval": 60,     # Check task queue every minute
-
+    "task_process_interval": 60,  # Check task queue every minute
     # Notification settings
     "quiet_hours_start": 22,  # 10 PM
-    "quiet_hours_end": 7,     # 7 AM
+    "quiet_hours_end": 7,  # 7 AM
     "min_notification_gap": 300,  # At least 5 min between notifications
-
     # Thresholds
     "memory_warning_threshold": 85,  # Warn at 85% memory
     "urgent_email_keywords": ["urgent", "asap", "emergency", "deadline"],
-
     # Meeting prep
     "meeting_prep_minutes": 15,  # Prepare context 15 min before meetings
 }
@@ -73,17 +68,15 @@ log_dir.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.FileHandler(log_dir / "agent.log"),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler(log_dir / "agent.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger("autonomous-agent")
 
 # ============================================
 # MAIN AGENT CLASS
 # ============================================
+
 
 class AutonomousAgent:
     """The persistent background agent that watches, thinks, acts, and reports."""
@@ -123,7 +116,7 @@ class AutonomousAgent:
         try:
             state_file = CONFIG["live_state_file"]
             if state_file and os.path.exists(state_file):
-                with open(state_file, 'r') as f:
+                with open(state_file, "r") as f:
                     return json.load(f)
         except Exception as e:
             logger.error(f"Error reading live state: {e}")
@@ -162,10 +155,7 @@ class AutonomousAgent:
                 await self.check_system_thresholds(state)
 
                 # Track history (keep last 100)
-                self.state_history.append({
-                    "timestamp": datetime.now().isoformat(),
-                    "state": state
-                })
+                self.state_history.append({"timestamp": datetime.now().isoformat(), "state": state})
                 if len(self.state_history) > 100:
                     self.state_history = self.state_history[-100:]
 
@@ -190,7 +180,7 @@ class AutonomousAgent:
             await self.maybe_notify(
                 "High Memory Usage",
                 f"System memory is at {memory}%. Consider closing unused apps.",
-                priority="medium"
+                priority="medium",
             )
 
     # ==========================================
@@ -212,7 +202,11 @@ class AutonomousAgent:
                         minutes_until = event.get("minutes_until", 999)
 
                         # Prepare context before meeting
-                        if CONFIG["meeting_prep_minutes"] - 2 <= minutes_until <= CONFIG["meeting_prep_minutes"] + 2:
+                        if (
+                            CONFIG["meeting_prep_minutes"] - 2
+                            <= minutes_until
+                            <= CONFIG["meeting_prep_minutes"] + 2
+                        ):
                             await self.prepare_meeting_context(event)
 
             except Exception as e:
@@ -228,11 +222,7 @@ class AutonomousAgent:
 
         try:
             parts = calendar_cmd.split()
-            result = subprocess.run(
-                parts + ["upcoming", "5"],
-                capture_output=True,
-                timeout=30
-            )
+            result = subprocess.run(parts + ["upcoming", "5"], capture_output=True, timeout=30)
 
             if result.returncode == 0:
                 events = []
@@ -252,9 +242,7 @@ class AutonomousAgent:
         context = await self.context_builder.build_meeting_context(title, attendees)
 
         await self.maybe_notify(
-            f"{title} in {CONFIG['meeting_prep_minutes']} min",
-            context,
-            priority="high"
+            f"{title} in {CONFIG['meeting_prep_minutes']} min", context, priority="high"
         )
 
     # ==========================================
@@ -263,7 +251,9 @@ class AutonomousAgent:
 
     async def process_task_queue(self):
         """Process background tasks using PARALLEL TaskExecutor."""
-        logger.info(f"Parallel task queue processor starting (max workers: {self.task_executor.max_workers})")
+        logger.info(
+            f"Parallel task queue processor starting (max workers: {self.task_executor.max_workers})"
+        )
 
         while self.running:
             if self.paused:
@@ -279,14 +269,15 @@ class AutonomousAgent:
                     tasks = self.task_executor.get_next_tasks(limit=available_slots)
 
                     if tasks:
-                        logger.info(f"Launching {len(tasks)} task(s) in parallel (slots: {available_slots}/{self.task_executor.max_workers})")
+                        logger.info(
+                            f"Launching {len(tasks)} task(s) in parallel (slots: {available_slots}/{self.task_executor.max_workers})"
+                        )
 
                         # Launch all tasks concurrently
                         for task in tasks:
                             logger.info(f"Processing task: #{task['id']} - {task['title']}")
                             asyncio.create_task(
-                                self._execute_task_wrapper(task),
-                                name=f"task-{task['id']}"
+                                self._execute_task_wrapper(task), name=f"task-{task['id']}"
                             )
 
                         # Brief delay to let tasks start
@@ -304,7 +295,7 @@ class AutonomousAgent:
 
     async def _execute_task_wrapper(self, task: dict):
         """Wrapper for parallel task execution with error handling."""
-        task_id = task['id']
+        task_id = task["id"]
         try:
             await self.task_executor.execute_task(task)
             logger.info(f"Task #{task_id} completed successfully")
@@ -326,34 +317,33 @@ class AutonomousAgent:
             await self.maybe_notify(
                 f"Task Complete: {task.title}",
                 f"{result[:500]}..." if len(result) > 500 else result,
-                priority="medium"
+                priority="medium",
             )
 
         except Exception as e:
             error_msg = str(e)
             self.task_queue.fail_task(task.id, error_msg)
 
-            await self.maybe_notify(
-                f"Task Failed: {task.title}",
-                error_msg,
-                priority="high"
-            )
+            await self.maybe_notify(f"Task Failed: {task.title}", error_msg, priority="high")
 
     async def run_claude_task(self, prompt: str) -> str:
         """Run a task through Claude Code CLI."""
         try:
             # --dangerously-skip-permissions is required for non-interactive execution
             proc = await asyncio.create_subprocess_exec(
-                'claude', '-p', prompt,
-                '--output-format', 'text',
-                '--dangerously-skip-permissions',
+                "claude",
+                "-p",
+                prompt,
+                "--output-format",
+                "text",
+                "--dangerously-skip-permissions",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await asyncio.wait_for(
                 proc.communicate(),
-                timeout=300  # 5 minute timeout for background tasks
+                timeout=300,  # 5 minute timeout for background tasks
             )
 
             return stdout.decode().strip() or "Task completed (no output)"
@@ -403,18 +393,14 @@ class AutonomousAgent:
             "Good Morning",
             briefing,
             priority="high",
-            force=True  # Always send morning briefing
+            force=True,  # Always send morning briefing
         )
 
     async def send_evening_summary(self):
         """Send evening summary."""
         summary = await self.context_builder.build_evening_summary(self.actions_taken)
 
-        await self.maybe_notify(
-            "Daily Summary",
-            summary,
-            priority="medium"
-        )
+        await self.maybe_notify("Daily Summary", summary, priority="medium")
 
     # ==========================================
     # NOTIFICATION MANAGEMENT
@@ -431,7 +417,9 @@ class AutonomousAgent:
         else:
             return start <= hour < end
 
-    async def maybe_notify(self, title: str, message: str, priority: str = "low", force: bool = False):
+    async def maybe_notify(
+        self, title: str, message: str, priority: str = "low", force: bool = False
+    ):
         """Send notification if appropriate."""
 
         # Check quiet hours (unless forced)
@@ -451,12 +439,14 @@ class AutonomousAgent:
         self.last_notification_time = datetime.now()
 
         # Log action
-        self.actions_taken.append({
-            "timestamp": datetime.now().isoformat(),
-            "type": "notification",
-            "title": title,
-            "priority": priority
-        })
+        self.actions_taken.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "type": "notification",
+                "title": title,
+                "priority": priority,
+            }
+        )
 
     # ==========================================
     # CONTROL METHODS
@@ -486,7 +476,9 @@ class AutonomousAgent:
             "uptime": str(datetime.now() - self.session_start),
             "pending_tasks": self.task_queue.count_pending(),
             "actions_taken": len(self.actions_taken),
-            "last_notification": self.last_notification_time.isoformat() if self.last_notification_time else None
+            "last_notification": self.last_notification_time.isoformat()
+            if self.last_notification_time
+            else None,
         }
 
     # ==========================================
@@ -519,7 +511,7 @@ class AutonomousAgent:
             "- Priority email alerts\n"
             "- Pattern learning\n\n"
             "Control via: python agent_control.py",
-            "low"
+            "low",
         )
 
         try:
@@ -540,6 +532,7 @@ class AutonomousAgent:
 # ENTRY POINT
 # ============================================
 
+
 async def main():
     agent = AutonomousAgent()
 
@@ -548,6 +541,7 @@ async def main():
     except KeyboardInterrupt:
         agent.stop()
         print("\nAgent stopped.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

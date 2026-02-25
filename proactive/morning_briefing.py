@@ -24,14 +24,12 @@ from pathlib import Path
 logger = logging.getLogger("morning_briefing")
 
 # Configurable paths via environment variables
-ALERTS_FILE = Path(os.getenv(
-    "PROACTIVE_ALERTS_FILE",
-    str(Path(__file__).parent / "email_alerts.json")
-))
-STATE_FILE = Path(os.getenv(
-    "PROACTIVE_STATE_FILE",
-    str(Path(__file__).parent / "system_state.json")
-))
+ALERTS_FILE = Path(
+    os.getenv("PROACTIVE_ALERTS_FILE", str(Path(__file__).parent / "email_alerts.json"))
+)
+STATE_FILE = Path(
+    os.getenv("PROACTIVE_STATE_FILE", str(Path(__file__).parent / "system_state.json"))
+)
 WEATHER_LOCATION = os.getenv("PROACTIVE_WEATHER_LOCATION", "New York")
 
 
@@ -44,6 +42,7 @@ def get_calendar_events() -> str:
     """
     try:
         from calendar_client import get_today_events, format_event
+
         events = get_today_events()
 
         if not events:
@@ -53,7 +52,7 @@ def get_calendar_events() -> str:
         for event in events:
             formatted = format_event(event)
             lines.append(f"  {formatted['start']} - {formatted['summary']}")
-            if formatted.get('location'):
+            if formatted.get("location"):
                 lines.append(f"    Location: {formatted['location']}")
 
         return "\n".join(lines)
@@ -98,10 +97,10 @@ def get_email_summary() -> str:
     try:
         if STATE_FILE.exists():
             state = json.loads(STATE_FILE.read_text())
-            email = state.get('email', {})
-            unread = email.get('unread_count', 0)
-            urgent = email.get('urgent_count', 0)
-            needs_response = email.get('needs_response_count', 0)
+            email = state.get("email", {})
+            unread = email.get("unread_count", 0)
+            urgent = email.get("urgent_count", 0)
+            needs_response = email.get("needs_response_count", 0)
 
             summary = []
             if unread > 0:
@@ -160,15 +159,15 @@ def get_system_status() -> str:
     try:
         if STATE_FILE.exists():
             state = json.loads(STATE_FILE.read_text())
-            apps = state.get('applications', [])
+            apps = state.get("applications", [])
 
             if not apps:
                 return "No monitored applications running"
 
             app_names = []
             for app in apps[:5]:  # Show top 5
-                name = app.get('name', app.get('ProcessName', ''))
-                title = app.get('title', app.get('MainWindowTitle', ''))
+                name = app.get("name", app.get("ProcessName", ""))
+                title = app.get("title", app.get("MainWindowTitle", ""))
                 if name:
                     app_names.append(f"{name}" + (f": {title}" if title else ""))
 
@@ -234,6 +233,7 @@ def main():
     # Send via notification channels
     try:
         from notify_channels import notify_all
+
         results = notify_all(briefing, voice=True)
         print(f"Notification results: {results}")
     except ImportError:

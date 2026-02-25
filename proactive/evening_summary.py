@@ -23,16 +23,16 @@ from pathlib import Path
 
 logger = logging.getLogger("evening_summary")
 
-ALERTS_FILE = Path(os.getenv(
-    "PROACTIVE_ALERTS_FILE",
-    str(Path(__file__).parent / "email_alerts.json")
-))
+ALERTS_FILE = Path(
+    os.getenv("PROACTIVE_ALERTS_FILE", str(Path(__file__).parent / "email_alerts.json"))
+)
 
 
 def _get_today_recap() -> str:
     """Get recap of today's calendar events."""
     try:
         from calendar_client import get_today_events, format_event
+
         events = get_today_events()
 
         if not events:
@@ -85,19 +85,26 @@ def _get_tomorrow_preview() -> str:
     """
     try:
         from calendar_client import get_service
+
         service = get_service()
 
-        tomorrow = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        tomorrow = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(
+            days=1
+        )
         end_of_tomorrow = tomorrow + timedelta(days=1)
 
-        events_result = service.events().list(
-            calendarId="primary",
-            timeMin=tomorrow.isoformat() + "Z",
-            timeMax=end_of_tomorrow.isoformat() + "Z",
-            singleEvents=True,
-            orderBy="startTime",
-            maxResults=5,
-        ).execute()
+        events_result = (
+            service.events()
+            .list(
+                calendarId="primary",
+                timeMin=tomorrow.isoformat() + "Z",
+                timeMax=end_of_tomorrow.isoformat() + "Z",
+                singleEvents=True,
+                orderBy="startTime",
+                maxResults=5,
+            )
+            .execute()
+        )
 
         events = events_result.get("items", [])
         if not events:
@@ -159,6 +166,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--send":
         try:
             from notify_channels import notify_telegram_only
+
             notify_telegram_only(summary)
             print("\nSent to Telegram.")
         except ImportError:

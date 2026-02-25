@@ -32,6 +32,7 @@ if str(_SENSE_DIR) not in sys.path:
 
 try:
     from sense import CommonSense
+
     _SENSE_AVAILABLE = True
 except ImportError as _e:
     _SENSE_AVAILABLE = False
@@ -76,23 +77,28 @@ _SAFE_ACTIONS = [
 ]
 
 # Mixed bag for throughput testing (representative workload)
-_MIXED_ACTIONS = _BLOCKED_ACTIONS + _SAFE_ACTIONS + [
-    "push feature branch to remote",
-    "send webhook notification",
-    "deploy to staging",
-    "delete temp directory",
-    "overwrite output file",
-    "merge pull request",
-    "publish npm package",
-    "rm -rf ./cache",
-    "backup database before migration",
-    "verify path exists before writing",
-]
+_MIXED_ACTIONS = (
+    _BLOCKED_ACTIONS
+    + _SAFE_ACTIONS
+    + [
+        "push feature branch to remote",
+        "send webhook notification",
+        "deploy to staging",
+        "delete temp directory",
+        "overwrite output file",
+        "merge pull request",
+        "publish npm package",
+        "rm -rf ./cache",
+        "backup database before migration",
+        "verify path exists before writing",
+    ]
+)
 
 
 # ---------------------------------------------------------------------------
 # Benchmark helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_cs(db_path: Optional[str] = None) -> "CommonSense":
     """Instantiate CommonSense pointing at a bench DB (or no DB)."""
@@ -241,99 +247,124 @@ def bench_seed_load_time() -> dict:
 # Suite runner
 # ---------------------------------------------------------------------------
 
+
 def run(verbose: bool = False) -> list[dict]:
     """Run all sense benchmarks. Returns list of result dicts."""
     results = []
 
     if not _SENSE_AVAILABLE:
-        results.append({
-            "benchmark": "import_error",
-            "error": f"Could not import sense.py: {_SENSE_IMPORT_ERROR}",
-            "seeds_path": str(_SEEDS_PATH),
-            "seeds_exists": _SEEDS_PATH.exists(),
-        })
+        results.append(
+            {
+                "benchmark": "import_error",
+                "error": f"Could not import sense.py: {_SENSE_IMPORT_ERROR}",
+                "seeds_path": str(_SEEDS_PATH),
+                "seeds_exists": _SEEDS_PATH.exists(),
+            }
+        )
         if verbose:
             print(f"  [ERROR] Could not import sense.py: {_SENSE_IMPORT_ERROR}")
         return results
 
     # --- Seed load time ---
     seed_load = bench_seed_load_time()
-    results.append({
-        "benchmark": "seed_load_time",
-        "label": f"Load {seed_load['seed_count']} seeds from JSON",
-        "elapsed_s": round(seed_load["cold_load_ms"] / 1000, 6),
-        "detail": seed_load,
-    })
+    results.append(
+        {
+            "benchmark": "seed_load_time",
+            "label": f"Load {seed_load['seed_count']} seeds from JSON",
+            "elapsed_s": round(seed_load["cold_load_ms"] / 1000, 6),
+            "detail": seed_load,
+        }
+    )
     if verbose:
-        print(f"  [seed_load] cold={seed_load['cold_load_ms']:.2f}ms | warm={seed_load['warm_load_ms']*1000:.4f}us | {seed_load['seed_count']} seeds")
+        print(
+            f"  [seed_load] cold={seed_load['cold_load_ms']:.2f}ms | warm={seed_load['warm_load_ms'] * 1000:.4f}us | {seed_load['seed_count']} seeds"
+        )
 
     # Create a warm CommonSense instance for remaining tests
     cs = _make_cs()
 
     # --- Check throughput (safe actions) ---
     safe_tp = bench_check_throughput(cs, _SAFE_ACTIONS * 5, label="safe_x5")
-    results.append({
-        "benchmark": "check_throughput_safe",
-        "label": f"cs.before() x{safe_tp['action_count']} safe actions",
-        "elapsed_s": safe_tp["elapsed_s"],
-        "ops_per_s": safe_tp["ops_per_s"],
-        "per_call_ms": safe_tp["per_call_ms"],
-        "detail": safe_tp,
-    })
+    results.append(
+        {
+            "benchmark": "check_throughput_safe",
+            "label": f"cs.before() x{safe_tp['action_count']} safe actions",
+            "elapsed_s": safe_tp["elapsed_s"],
+            "ops_per_s": safe_tp["ops_per_s"],
+            "per_call_ms": safe_tp["per_call_ms"],
+            "detail": safe_tp,
+        }
+    )
     if verbose:
-        print(f"  [throughput_safe] {safe_tp['ops_per_s']:,} ops/s | {safe_tp['per_call_ms']:.3f}ms/call")
+        print(
+            f"  [throughput_safe] {safe_tp['ops_per_s']:,} ops/s | {safe_tp['per_call_ms']:.3f}ms/call"
+        )
 
     # --- Check throughput (blocked actions) ---
     blocked_tp = bench_check_throughput(cs, _BLOCKED_ACTIONS * 5, label="blocked_x5")
-    results.append({
-        "benchmark": "check_throughput_blocked",
-        "label": f"cs.before() x{blocked_tp['action_count']} blocked actions",
-        "elapsed_s": blocked_tp["elapsed_s"],
-        "ops_per_s": blocked_tp["ops_per_s"],
-        "per_call_ms": blocked_tp["per_call_ms"],
-        "detail": blocked_tp,
-    })
+    results.append(
+        {
+            "benchmark": "check_throughput_blocked",
+            "label": f"cs.before() x{blocked_tp['action_count']} blocked actions",
+            "elapsed_s": blocked_tp["elapsed_s"],
+            "ops_per_s": blocked_tp["ops_per_s"],
+            "per_call_ms": blocked_tp["per_call_ms"],
+            "detail": blocked_tp,
+        }
+    )
     if verbose:
-        print(f"  [throughput_blocked] {blocked_tp['ops_per_s']:,} ops/s | {blocked_tp['per_call_ms']:.3f}ms/call")
+        print(
+            f"  [throughput_blocked] {blocked_tp['ops_per_s']:,} ops/s | {blocked_tp['per_call_ms']:.3f}ms/call"
+        )
 
     # --- Check throughput (mixed, 100 calls) ---
     mixed_actions = (_MIXED_ACTIONS * 3)[:100]
     mixed_tp = bench_check_throughput(cs, mixed_actions, label="mixed_100")
-    results.append({
-        "benchmark": "check_throughput_mixed_100",
-        "label": "cs.before() x100 mixed actions",
-        "elapsed_s": mixed_tp["elapsed_s"],
-        "ops_per_s": mixed_tp["ops_per_s"],
-        "per_call_ms": mixed_tp["per_call_ms"],
-        "detail": mixed_tp,
-    })
+    results.append(
+        {
+            "benchmark": "check_throughput_mixed_100",
+            "label": "cs.before() x100 mixed actions",
+            "elapsed_s": mixed_tp["elapsed_s"],
+            "ops_per_s": mixed_tp["ops_per_s"],
+            "per_call_ms": mixed_tp["per_call_ms"],
+            "detail": mixed_tp,
+        }
+    )
     if verbose:
-        print(f"  [throughput_mixed_100] {mixed_tp['ops_per_s']:,} ops/s | {mixed_tp['per_call_ms']:.3f}ms/call | blocked={mixed_tp['blocked']} warned={mixed_tp['warned']} clean={mixed_tp['clean']}")
+        print(
+            f"  [throughput_mixed_100] {mixed_tp['ops_per_s']:,} ops/s | {mixed_tp['per_call_ms']:.3f}ms/call | blocked={mixed_tp['blocked']} warned={mixed_tp['warned']} clean={mixed_tp['clean']}"
+        )
 
     # --- Seed matching accuracy ---
     accuracy = bench_seed_accuracy(cs)
-    results.append({
-        "benchmark": "seed_accuracy",
-        "label": "Seed block detection accuracy",
-        "accuracy": accuracy["accuracy"],
-        "accuracy_pct": accuracy["accuracy_pct"],
-        "detail": accuracy,
-    })
+    results.append(
+        {
+            "benchmark": "seed_accuracy",
+            "label": "Seed block detection accuracy",
+            "accuracy": accuracy["accuracy"],
+            "accuracy_pct": accuracy["accuracy_pct"],
+            "detail": accuracy,
+        }
+    )
     if verbose:
-        print(f"  [seed_accuracy] {accuracy['accuracy_pct']} ({accuracy['correctly_caught']}/{accuracy['total_blocked_actions']}) | missed: {accuracy['missed']}")
+        print(
+            f"  [seed_accuracy] {accuracy['accuracy_pct']} ({accuracy['correctly_caught']}/{accuracy['total_blocked_actions']}) | missed: {accuracy['missed']}"
+        )
         if accuracy["missed_actions"]:
             for m in accuracy["missed_actions"]:
                 print(f"    MISSED: {m}")
 
     # --- Confidence scoring consistency ---
     conf = bench_confidence_consistency(cs)
-    results.append({
-        "benchmark": "confidence_consistency",
-        "label": "Confidence scoring bounds + ordering",
-        "ordering_correct": conf["ordering_correct"],
-        "out_of_range": conf["out_of_range_count"],
-        "detail": conf,
-    })
+    results.append(
+        {
+            "benchmark": "confidence_consistency",
+            "label": "Confidence scoring bounds + ordering",
+            "ordering_correct": conf["ordering_correct"],
+            "out_of_range": conf["out_of_range_count"],
+            "detail": conf,
+        }
+    )
     if verbose:
         print(
             f"  [confidence] safe_avg={conf['safe_avg_confidence']:.3f} | "
