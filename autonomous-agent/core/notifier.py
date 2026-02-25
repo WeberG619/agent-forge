@@ -12,10 +12,8 @@ If no Telegram credentials are set, notifications are logged to console only.
 """
 
 import os
-import sys
 import asyncio
 import logging
-from typing import Optional
 from datetime import datetime
 
 logger = logging.getLogger("autonomous-agent.notifier")

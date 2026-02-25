@@ -9,12 +9,10 @@ via the Claude Code CLI.
 """
 
 import asyncio
-import json
 import logging
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, Optional, Callable, Any
-from dataclasses import dataclass, asdict
+from typing import Dict, Optional, Callable
+from dataclasses import dataclass
 
 logger = logging.getLogger("autonomous-agent.dispatcher")
 

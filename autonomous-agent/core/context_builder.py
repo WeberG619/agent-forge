@@ -11,7 +11,6 @@ calendar sources.
 
 import os
 import json
-import asyncio
 import subprocess
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -93,7 +92,7 @@ class ContextBuilder:
         today_actions = [a for a in actions_taken if a.get("timestamp", "").startswith(today)]
 
         if today_actions:
-            sections.append(f"\nAgent Activity:")
+            sections.append("\nAgent Activity:")
             sections.append(f"  {len(today_actions)} actions taken today")
 
             # Categorize

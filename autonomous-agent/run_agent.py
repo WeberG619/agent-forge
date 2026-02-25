@@ -16,9 +16,7 @@ import sys
 import argparse
 import asyncio
 import signal
-import json
 from pathlib import Path
-from datetime import datetime
 
 # Add core to path
 sys.path.insert(0, str(Path(__file__).parent))

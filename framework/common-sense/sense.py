@@ -28,8 +28,6 @@ Usage:
 """
 
 import json
-import subprocess
-import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
@@ -348,8 +346,6 @@ class CommonSense:
 
         for seed in _SEEDS_CACHE:
             detection = seed.get("detection", "").lower()
-            what_wrong = seed.get("what_went_wrong", "").lower()
-
             # Check detection keywords against action
             detection_words = set(detection.replace(",", " ").replace("/", " ").split())
             overlap = action_words & detection_words

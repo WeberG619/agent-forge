@@ -13,10 +13,8 @@ No live Claude API calls are made.
 
 from __future__ import annotations
 
-import sys
 import re
 import time
-import json
 from pathlib import Path
 from typing import Optional
 

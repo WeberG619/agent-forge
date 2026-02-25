@@ -154,7 +154,7 @@ def ping() -> Optional[float]:
     """Ping the bridge. Returns round-trip ms or None if unavailable."""
     try:
         start = time.time()
-        result = ps_exec("__ping__", timeout=5)
+        ps_exec("__ping__", timeout=5)
         # Ping is handled specially by server — but let's just measure the round trip
         elapsed = (time.time() - start) * 1000
         return elapsed
@@ -179,7 +179,7 @@ def _cmd_test():
     # Test actual command
     print()
     result = ps_exec("Write-Output 'Hello from PowerShell Bridge!'")
-    print(f"  Command: Write-Output 'Hello from PowerShell Bridge!'")
+    print("  Command: Write-Output 'Hello from PowerShell Bridge!'")
     print(f"  Output:  {result.stdout}")
     print(f"  Success: {result.success}")
     print(f"  Time:    {result.duration_ms:.0f}ms (server-side)")
@@ -188,7 +188,7 @@ def _cmd_test():
     # Test Get-Date
     print()
     result = ps_exec("[DateTime]::Now.ToString('o')")
-    print(f"  Command: [DateTime]::Now.ToString('o')")
+    print("  Command: [DateTime]::Now.ToString('o')")
     print(f"  Output:  {result.stdout}")
     print(f"  Time:    {result.duration_ms:.0f}ms")
 
@@ -235,14 +235,14 @@ def _cmd_benchmark():
     print(f"    Average: {avg_direct:.0f}ms")
 
     # Summary
-    print(f"\n  Summary:")
+    print("\n  Summary:")
     print(f"    Direct subprocess: {avg_direct:.0f}ms avg")
     if avg_bridge:
         speedup = avg_direct / avg_bridge
         print(f"    Bridge:            {avg_bridge:.0f}ms avg")
         print(f"    Speedup:           {speedup:.0f}x faster")
     else:
-        print(f"    Bridge:            not available")
+        print("    Bridge:            not available")
 
 
 def _cmd_exec(command: str):

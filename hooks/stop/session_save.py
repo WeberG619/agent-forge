@@ -17,7 +17,7 @@ def main():
         stdin_data = sys.stdin.read()
         if not stdin_data.strip():
             sys.exit(0)
-        hook_input = json.loads(stdin_data)
+        json.loads(stdin_data)
     except (json.JSONDecodeError, Exception):
         sys.exit(0)
 

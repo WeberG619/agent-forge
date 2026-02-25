@@ -15,10 +15,6 @@ from __future__ import annotations
 
 import sys
 import time
-import json
-import sqlite3
-import os
-import tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -35,7 +31,7 @@ if str(_SENSE_DIR) not in sys.path:
     sys.path.insert(0, str(_SENSE_DIR))
 
 try:
-    from sense import CommonSense, ActionCheck
+    from sense import CommonSense
     _SENSE_AVAILABLE = True
 except ImportError as _e:
     _SENSE_AVAILABLE = False
@@ -212,7 +208,6 @@ def bench_confidence_consistency(cs: "CommonSense") -> dict:
 
 def bench_seed_load_time() -> dict:
     """Measure cold and warm seed loading time."""
-    import importlib
     import sense as sense_module
 
     # Cold load — clear the cache

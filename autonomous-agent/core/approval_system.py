@@ -113,7 +113,7 @@ def request_approval(
 
     # Build notification message
     timeout_action = "proceed" if auto_approve else "cancel"
-    msg = f"*Approval Required*\n\n"
+    msg = "*Approval Required*\n\n"
     msg += f"*Action:* {action}\n"
     msg += f"*What:* {description}\n"
     if details:

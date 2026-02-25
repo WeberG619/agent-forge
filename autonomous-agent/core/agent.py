@@ -14,18 +14,16 @@ import json
 import os
 import sys
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from typing import Dict, List
 import subprocess
-import traceback
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.task_queue import TaskQueue, Task, TaskStatus
-from core.decision_engine import DecisionEngine, Decision
+from core.decision_engine import DecisionEngine
 from core.notifier import Notifier
 from core.context_builder import ContextBuilder
 from core.autonomous_triggers import AutonomousTriggers
@@ -237,7 +235,6 @@ class AutonomousAgent:
             )
 
             if result.returncode == 0:
-                output = result.stdout.decode()
                 events = []
                 # Parse output - adjust based on your calendar tool's format
                 return events

@@ -13,12 +13,11 @@ This transforms Claude from reactive to truly proactive by:
 
 import json
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from collections import defaultdict, Counter
-from dataclasses import dataclass, asdict
-import re
+from collections import defaultdict
+from dataclasses import dataclass
 
 # Paths
 BASE_DIR = Path(__file__).parent
@@ -401,7 +400,6 @@ class PatternAnalyzer:
             })
 
         # Find all triggers and next actions
-        all_nexts = set(s['next_action'] for s in sequences)
         all_triggers = set(s['trigger_action'] for s in sequences)
 
         # Prefer starting points that begin chains (triggers not often reached from elsewhere)

@@ -17,7 +17,7 @@ import signal
 import socket
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, List, Optional
 import logging
 from logging.handlers import RotatingFileHandler
 import subprocess

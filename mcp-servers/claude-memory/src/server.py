@@ -11,7 +11,7 @@ import os
 import numpy as np
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from mcp.server.fastmcp import FastMCP
 
 # =============================================================================
@@ -112,9 +112,6 @@ def get_db():
 
 def verify_database_integrity():
     """Check database integrity and attempt recovery if needed."""
-    import sys
-    import shutil
-    from glob import glob
 
     if not DB_PATH.exists():
         print("Database does not exist, will be created.")
@@ -1183,7 +1180,7 @@ def memory_stats() -> str:
 
     conn.close()
 
-    output = [f"# Memory System Statistics\n"]
+    output = ["# Memory System Statistics\n"]
     output.append(f"**User**: {user_id}")
     output.append(f"**Total Memories**: {total}")
     output.append(f"**Database Size**: {db_size:.1f} KB\n")
@@ -1899,7 +1896,7 @@ def memory_recall_fast(
 
     result = engram.recall(query, project, limit)
 
-    output = [f"# Memory Recall (Engram Enhanced)\n"]
+    output = ["# Memory Recall (Engram Enhanced)\n"]
     output.append(f"**Source**: {result['source']} | **Compressed Query**: {result['compressed_query']}\n")
 
     if not result['results']:
@@ -2239,7 +2236,7 @@ def memory_check_before_action(
     output.append("**Review before proceeding:**\n")
 
     for corr, overlap_count in relevant_corrections[:3]:  # Top 3
-        output.append(f"---")
+        output.append("---")
         output.append(f"**Correction ID {corr['id']}** (relevance: {overlap_count} keywords)")
         output.append(f"Project: {corr['project'] or 'general'}")
         output.append(f"Surfaced {corr['times_surfaced']} times, helped {corr['times_helped']} times")
@@ -2386,7 +2383,7 @@ def memory_log_avoided_mistake(
                 INSERT INTO memory_relationships (source_id, target_id, relationship_type, notes)
                 VALUES (?, ?, 'supports', 'Success resulted from this correction')
             """, (success_id, correction_id))
-        except:
+        except Exception:
             pass  # Relationship may already exist
 
     conn.commit()
@@ -2456,7 +2453,7 @@ def memory_synthesize_patterns() -> str:
     if not corrections:
         return "No corrections found to analyze."
 
-    output = [f"# Correction Pattern Analysis\n"]
+    output = ["# Correction Pattern Analysis\n"]
     output.append(f"**Total Corrections:** {len(corrections)}\n")
 
     # Analyze by category

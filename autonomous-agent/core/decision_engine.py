@@ -10,10 +10,9 @@ own workflows.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable
 from datetime import datetime, timedelta
 from enum import Enum
-import re
 
 
 class ActionType(Enum):

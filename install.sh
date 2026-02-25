@@ -71,9 +71,9 @@ preflight_checks() {
 
     # Claude Code
     if [ -d "$CLAUDE_DIR" ]; then
-        print_step "Claude Code directory found (~/.claude/)"
+        print_step "Claude Code directory found ($HOME/.claude/)"
     else
-        print_warn "~/.claude/ not found — will be created"
+        print_warn "$HOME/.claude/ not found — will be created"
     fi
 
     # Node.js (optional)

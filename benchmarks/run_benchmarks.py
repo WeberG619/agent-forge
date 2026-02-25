@@ -66,7 +66,6 @@ def get_system_info() -> dict:
                     break
     except Exception:
         try:
-            import resource
             info["ram_gb"] = "N/A"
         except Exception:
             info["ram_gb"] = "N/A"

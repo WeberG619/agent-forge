@@ -6,7 +6,6 @@ SQLite-backed task queue for background work.
 """
 
 import sqlite3
-import json
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass

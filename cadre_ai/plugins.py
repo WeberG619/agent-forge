@@ -131,7 +131,7 @@ def install_from_url(url: str, dest_dir: Optional[Path] = None) -> Path:
     if errors:
         dest_path.unlink(missing_ok=True)
         raise RuntimeError(
-            f"Downloaded agent failed validation:\n"
+            "Downloaded agent failed validation:\n"
             + "\n".join(f"  - {e}" for e in errors)
         )
 
@@ -167,7 +167,7 @@ def install_from_file(path: Path, dest_dir: Optional[Path] = None) -> Path:
     errors = validate_agent(source)
     if errors:
         raise RuntimeError(
-            f"Agent file failed validation:\n"
+            "Agent file failed validation:\n"
             + "\n".join(f"  - {e}" for e in errors)
         )
 

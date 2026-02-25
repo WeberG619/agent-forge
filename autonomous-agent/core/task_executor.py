@@ -7,10 +7,8 @@ Supports parallel execution - runs multiple tasks simultaneously.
 """
 
 import asyncio
-import json
 import logging
 import sqlite3
-import os
 import threading
 from datetime import datetime
 from pathlib import Path

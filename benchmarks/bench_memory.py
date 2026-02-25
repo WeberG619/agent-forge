@@ -18,8 +18,6 @@ import os
 import time
 import random
 import tempfile
-from pathlib import Path
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Schema — mirrors mcp-servers/claude-memory/src/server.py exactly

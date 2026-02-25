@@ -18,8 +18,8 @@ import sqlite3
 import time
 import numpy as np
 from collections import OrderedDict
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, List, Optional, Tuple
@@ -484,7 +484,7 @@ class ContextGate:
             if memory.get('embedding'):
                 try:
                     mem_embedding = np.frombuffer(memory['embedding'], dtype=np.float32)
-                except:
+                except Exception:
                     pass
 
             # Calculate age in days
@@ -495,7 +495,7 @@ class ContextGate:
                 else:
                     created_dt = created_at
                 age_days = (datetime.now() - created_dt.replace(tzinfo=None)).days
-            except:
+            except Exception:
                 age_days = 30  # Default to 30 days if can't parse
 
             # Compute relevance

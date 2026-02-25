@@ -119,7 +119,7 @@ def cmd_status():
     if pid and _is_alive(pid):
         latency = _ping_bridge()
         if latency is not None:
-            print(f"  Status:   RUNNING")
+            print("  Status:   RUNNING")
             print(f"  PID:      {pid}")
             if health:
                 print(f"  PS PID:   {health.get('ps_pid', '?')}")
@@ -132,7 +132,7 @@ def cmd_status():
     elif pid:
         print(f"  Status:   DEAD (stale PID {pid})")
     else:
-        print(f"  Status:   STOPPED")
+        print("  Status:   STOPPED")
 
 
 def cmd_restart():
@@ -144,5 +144,5 @@ def cmd_restart():
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     {"start": cmd_start, "stop": cmd_stop, "status": cmd_status, "restart": cmd_restart}.get(
-        cmd, lambda: (print(f"Usage: python3 manage.py {{start|stop|status|restart}}"), sys.exit(1))
+        cmd, lambda: (print("Usage: python3 manage.py {start|stop|status|restart}"), sys.exit(1))
     )()

@@ -13,7 +13,7 @@ import base64
 import tempfile
 import time
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 import urllib.request
 import urllib.error
 
@@ -129,7 +129,7 @@ def detect_monitors() -> Dict[str, Dict]:
         _monitor_cache["data"] = monitors
         _monitor_cache["time"] = now
         return monitors
-    except:
+    except Exception:
         return MONITORS
 
 def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", browser: str = "chrome") -> bool:
@@ -170,7 +170,6 @@ def launch_browser_with_cdp(url: str = "about:blank", monitor: str = "center", b
     }
 
     config = browser_config.get(browser.lower(), browser_config["chrome"])
-    paths_check = " -or ".join([f'(Test-Path "{p}")' for p in config["paths"]])
 
     script = f"""
     # Find browser executable
@@ -352,7 +351,7 @@ def take_screenshot(monitor: str = "center", filename: str = None) -> tuple:
         try:
             w, h = stdout.strip().split('x')
             return filepath, int(w), int(h)
-        except:
+        except Exception:
             return filepath, mon['Width'], mon['Height']
     else:
         return None, 0, 0
@@ -412,7 +411,7 @@ def click_at(x: int, y: int, monitor: str = None, action: str = "click") -> dict
                 result['active_window'] = val
             elif key == 'action':
                 result['action'] = val
-    except:
+    except Exception:
         pass
 
     return result
@@ -451,7 +450,7 @@ def send_keys(keys: str) -> dict:
         for part in parts:
             key, val = part.split('=', 1)
             result[key] = val
-    except:
+    except Exception:
         pass
 
     return result
@@ -490,7 +489,7 @@ def scroll_at(x: int, y: int, monitor: str = None, direction: str = "down", clic
                 result['actual_y'] = int(ay)
             elif key == 'activewin':
                 result['active_window'] = val
-    except:
+    except Exception:
         pass
 
     return result
@@ -952,7 +951,7 @@ public class DpiInfo {
                     "scale_factor": round(int(parts[2]) / 96.0, 2),
                     "coordinate_space": "virtual (all screenshot/click coords use this)"
                 }
-            except:
+            except Exception:
                 pass
 
             info = {"monitors": monitors, "dpi_info": dpi_info}

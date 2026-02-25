@@ -14,6 +14,7 @@ Usage:
 
 import json
 import os
+import re as _re
 import signal
 import socketserver
 import subprocess
@@ -24,7 +25,6 @@ import time
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVER_PS1 = os.path.join(SCRIPT_DIR, "server.ps1")
 # Convert WSL path to Windows path for PowerShell
-import re as _re
 def _wsl_to_win(path):
     m = _re.match(r'/mnt/([a-z])/(.*)', path)
     if m:

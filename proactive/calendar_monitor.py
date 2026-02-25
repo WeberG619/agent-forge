@@ -95,7 +95,6 @@ class CalendarMonitor:
         for event in self._cached_events:
             event_id = event["id"]
             start_dt = event["start_dt"]
-            summary = event["summary"]
 
             # How many minutes until this event?
             delta = (start_dt - now).total_seconds() / 60

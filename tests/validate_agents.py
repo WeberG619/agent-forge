@@ -126,9 +126,9 @@ def main() -> int:
             failed += 1
             for err in errors:
                 print(err)
-            print(f"  FAIL\n")
+            print("  FAIL\n")
         else:
-            print(f"  OK\n")
+            print("  OK\n")
 
     # --- .yaml agents ---
     for path in yaml_files:
@@ -139,9 +139,9 @@ def main() -> int:
             failed += 1
             for err in errors:
                 print(err)
-            print(f"  FAIL\n")
+            print("  FAIL\n")
         else:
-            print(f"  OK\n")
+            print("  OK\n")
 
     # --- Summary ---
     print("-" * 50)

@@ -12,18 +12,17 @@ by modifying the WATCH_FOLDERS and PRIORITY_SENDERS lists below.
 """
 
 import os
-import sys
 import json
 import asyncio
 import logging
 import hashlib
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Callable
+from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, field
 
 # Import the agent dispatcher
-from core.agent_dispatcher import AgentDispatcher, DispatchEvent, dispatch_to_agent
+from core.agent_dispatcher import AgentDispatcher, DispatchEvent
 
 logger = logging.getLogger("autonomous-agent.triggers")
 

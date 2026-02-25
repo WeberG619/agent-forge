@@ -13,8 +13,7 @@ This is Claude's "brain" for understanding what you're working on.
 import json
 import sqlite3
 import re
-import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -287,9 +286,6 @@ class IntentPredictor:
 
         if len(correlations) > 1:
             projects = list(correlations.keys())
-            sources_by_project = {p: [s[0] for s in sources]
-                                  for p, sources in correlations.items()}
-
             # Alert if multiple distinct projects are detected simultaneously
             if len(projects) >= 2:
                 project_list = ', '.join(projects[:3])

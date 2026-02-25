@@ -65,7 +65,7 @@ def get_status() -> str:
     in_progress = counts.get("in_progress", 0)
     completed = counts.get("completed", 0)
 
-    status_parts.append(f"\nTask Queue:")
+    status_parts.append("\nTask Queue:")
     status_parts.append(f"  Pending: {pending}")
     status_parts.append(f"  In Progress: {in_progress}")
     status_parts.append(f"  Completed: {completed}")
